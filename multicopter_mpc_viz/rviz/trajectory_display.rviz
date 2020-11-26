@@ -6,9 +6,9 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /WholeBodyState1
         - /WholeBodyTrajectory1
-        - /WholeBodyTrajectory1/Robot1
+        - /WholeBodyTrajectory1/Center of Mass1
+        - /WholeBodyState1
       Splitter Ratio: 0.5
     Tree Height: 719
   - Class: rviz/Selection
@@ -54,6 +54,61 @@ Visualization Manager:
       Plane: XY
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
+      Value: true
+    - Center of Mass:
+        Alpha: 0.5
+        Axes Scale: 4
+        Enable: true
+        Line Color: 255; 255; 51
+        Line Style: Billboards
+        Line Width: 0.009999999776482582
+      Class: multicopter_mpc_rviz_plugins/WholeBodyTrajectory
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        iris__/imu_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        iris__base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        iris__rotor_0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        iris__rotor_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        iris__rotor_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        iris__rotor_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Name: WholeBodyTrajectory
+      Queue Size: 10
+      Robot:
+        Enable: true
+        Robot Alpha: 0.4000000059604645
+        Robot Collision: false
+        Robot Description: robot_description
+        Robot Visual: true
+      Topic: /whole_body_trajectory
+      Unreliable: false
       Value: true
     - Class: multicopter_mpc_rviz_plugins/WholeBodyState
       Enabled: true
@@ -111,64 +166,6 @@ Visualization Manager:
       Topic: /whole_body_state
       Unreliable: false
       Value: true
-    - Center of Mass:
-        Alpha: 1
-        Axes Scale: 1
-        Enable: true
-        Line Color: 0; 85; 255
-        Line Style: Billboards
-        Line Width: 0.009999999776482582
-      Class: multicopter_mpc_rviz_plugins/WholeBodyTrajectory
-      Enabled: true
-      Links:
-        All Links Enabled: true
-        Expand Joint Details: false
-        Expand Link Details: false
-        Expand Tree: false
-        Link Tree Style: Links in Alphabetic Order
-        iris__/imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        iris__base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        iris__rotor_0:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        iris__rotor_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        iris__rotor_2:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        iris__rotor_3:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-      Name: WholeBodyTrajectory
-      Queue Size: 10
-      Robot:
-        Enable: true
-        Robot Alpha: 1
-        Robot Collision: false
-        Robot Description: robot_description
-        Robot Visual: true
-      Topic: /whole_body_trajectory
-      Unreliable: false
-      Value: true
-      Waypoints:
-        Alpha: 1
-        Enable: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -197,7 +194,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 8.477765083312988
+      Distance: 14.175130844116211
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -205,17 +202,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -1.6628923416137695
-        Y: -0.4702399969100952
-        Z: -0.27992236614227295
+        X: 1.0864392518997192
+        Y: -1.1670303344726562
+        Z: -1.4578170776367188
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5853984951972961
+      Pitch: 0.4153985381126404
       Target Frame: <Fixed Frame>
-      Yaw: 0.6803963780403137
+      Yaw: 0.2853965759277344
     Saved: ~
 Window Geometry:
   Displays:
