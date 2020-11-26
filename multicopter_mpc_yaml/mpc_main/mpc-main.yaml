@@ -1,0 +1,11 @@
+mpc_controller:
+  # type: "PiceWiseMpc"
+  # yaml_path: "/home/pepms/ros-ws/mpc-ws/src/multicopter_mpc_ros/yaml/picewise-mpc.yaml"
+  # type: "RailMpc"
+  # yaml_path: "/home/pepms/wsros/mpc-ws/src/multicopter_mpc_ros/yaml/rail-mpc.yaml"
+  type: "CarrotMpc"
+  yaml_path: "/home/pepms/wsros/mpc-ws/src/multicopter_mpc_ros/yaml/carrot-mpc.yaml"
+  solver: "BoxFDDP"
+  integrator: "RK4"
+  running_iters: 70
+  callback: true
