@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import rospy
+import rospkg
+
 import tf
 
 from dynamic_reconfigure.server import Server
@@ -13,11 +15,11 @@ import pinocchio
 import example_robot_data
 
 import multicopter_mpc
-from multicopter_mpc.utils.path import MULTICOPTER_MPC_MULTIROTOR_DIR, MULTICOPTER_MPC_MISSION_DIR
+from multicopter_mpc.utils.path import MULTICOPTER_MPC_MULTIROTOR_DIR
 
 
 class Trajectory():
-    def __init__(self, mission, use_internal_gains=False):
+    def __init__(self, mission_path, trajectory_generation_path):
         self.uav = example_robot_data.loadIris()
         self.uav_model = self.uav.model
 
@@ -27,15 +29,10 @@ class Trajectory():
 
         # Mission
         self.mission = multicopter_mpc.Mission(self.uav.nq + self.uav.nv)
-        self.mission.fillWaypoints(MULTICOPTER_MPC_MISSION_DIR + "/" + mission)
-
-        if use_internal_gains:
-            trajectory_yaml_path = "/home/pepms/wsros/mpc-ws/src/multicopter_mpc_ros/yaml/feedback-gains/trajectory-generator.yaml"
-        else:
-            trajectory_yaml_path = "/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/trajectory_generation/trajectory-generator.yaml"
+        self.mission.fillWaypoints(mission_path)
 
         self.trajectory = multicopter_mpc.TrajectoryGenerator(self.uav_model, self.mc_params, self.mission)
-        self.trajectory.loadParameters(trajectory_yaml_path)
+        self.trajectory.loadParameters(trajectory_generation_path)
         self.dt = self.trajectory.dt
         self.trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeBoxFDDP,
                                       multicopter_mpc.IntegratorType.IntegratorTypeEuler, self.dt)
@@ -58,10 +55,14 @@ class TrajectoryNode():
 
         self.rate = rospy.Rate(100)
 
-        self.mission_name = rospy.get_param(rospy.get_name() + "/mission_type", "takeoff.yaml")
-        self.feedback_gains = rospy.get_param(rospy.get_name() + "/use_internal_gains", False)
+        rospack = rospkg.RosPack()
+        self.mission_path = rospy.get_param(rospy.get_namespace() + "/mission_path",
+                                            rospack.get_path('multicopter_mpc_yaml') + '/missions/takeoff.yaml')
+        self.trajectory_generation_yaml_path = rospy.get_param(
+            rospy.get_namespace() + "/trajectory_generation_yaml_path",
+            rospack.get_path('multicopter_mpc_yaml') + '/trajectory_generation/trajectory-generator.yaml')
 
-        self.trajectory = Trajectory(self.mission_name)
+        self.trajectory = Trajectory(self.mission_path, self.trajectory_generation_yaml_path)
         self.xs, self.us = self.trajectory.compute()
         self.us.append(self.us[-1])
 

@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="namespace_controller" value="mpc_controller"/>
+  <arg name="namespace_trajectory_generation" value="trajectory_generation"/>
+  <arg name="model" default="$(find example-robot-data)/robots/iris_description/robots/iris_simple.urdf"/>
+  <arg name="mission" default="passthrough.yaml"/>
+  <arg name="mpc_main_yaml_path" default="$(find multicopter_mpc_yaml)/mpc_main/mpc-main.yaml"/>
+  <arg name="trajectory_generation_yaml_path" default="$(find multicopter_mpc_yaml)/trajectory_generation/trajectory-generator.yaml"/>
+
+  <include file="$(find multicopter_mpc_viz)/launch/trajectory_generator_viz.launch">
+    <arg name="namespace" value="$(arg namespace_trajectory_generation)"/>
+    <arg name="model" value="$(arg model)"/>
+    <arg name="mission" value="$(arg mission)"/>
+    <arg name="trajectory_generation_yaml_path" value="$(arg trajectory_generation_yaml_path)"/>
+    <arg name="launch_tools" value="false"/>
+  </include>
+
+  <group ns="$(arg namespace_controller)">
+    <param name="robot_description" textfile="$(arg model)" />
+    <param name="mission_path" value="$(find multicopter_mpc_yaml)/missions/$(arg mission)" />
+    <param name="mpc_main_yaml_path" value="$(arg mpc_main_yaml_path)" />
+    <param name="dynamic_reconfigure_client" value="$(arg namespace_trajectory_generation)/tg_node" />
+
+    <node pkg="multicopter_mpc_viz" name="mpc_controller_node" type="mpc_controller_viz.py" output="screen"/>
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find multicopter_mpc_viz)/rviz/mpc_controller_display.rviz"/>
+    <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure"/>
+  </group>
+
+</launch>
