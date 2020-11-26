@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="$(find multicopter_mpc_viz)" name="mc_state_publisher" type="trajectory_generation_viz.py" output="screen">
+  </node>
+
+</launch>
