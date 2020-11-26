@@ -1,28 +1,33 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(multicopter_mpc_viz)
+project(multicopter_mpc_controller)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
+
+set(CMAKE_CXX_FLAGS "-DPINOCCHIO_URDFDOM_TYPEDEF_SHARED_PTR -DPINOCCHIO_URDFDOM_USE_STD_SHARED_PTR -DBOOST_MPL_LIMIT_LIST_SIZE=30 -DPINOCCHIO_WITH_URDFDOM")
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-    rospy
-    std_msgs
-    geometry_msgs
-    multicopter_mpc_msgs
-    dynamic_reconfigure
+  roscpp
+  dynamic_reconfigure
+  mav_msgs
 )
 
 ## System dependencies are found with CMake's conventions
+find_package(pinocchio REQUIRED)
+find_package(crocoddyl REQUIRED)
+find_package(multicopter_mpc REQUIRED)
+find_package(Eigen3 REQUIRED)
+
 # find_package(Boost REQUIRED COMPONENTS system)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-catkin_python_setup()
+# catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -48,6 +53,32 @@ catkin_python_setup()
 ##   * uncomment the generate_messages entry below
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
+## Generate messages in the 'msg' folder
+# add_message_files(
+#   FILES
+#   Message1.msg
+#   Message2.msg
+# )
+
+## Generate services in the 'srv' folder
+# add_service_files(
+#   FILES
+#   Service1.srv
+#   Service2.srv
+# )
+
+## Generate actions in the 'action' folder
+# add_action_files(
+#   FILES
+#   Action1.action
+#   Action2.action
+# )
+
+## Generate added messages and services with any dependencies listed here
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs  # Or other packages containing msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -65,9 +96,8 @@ catkin_python_setup()
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
 generate_dynamic_reconfigure_options(
-  cfg/visualization.cfg
+  cfg/params.cfg
 )
-
 
 ###################################
 ## catkin specific configuration ##
@@ -79,7 +109,10 @@ generate_dynamic_reconfigure_options(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-CATKIN_DEPENDS std_msgs geometry_msgs multicopter_mpc_msgs
+INCLUDE_DIRS include
+#  LIBRARIES multicopter_mpc_ros
+ CATKIN_DEPENDS roscpp mav_msgs multicopter_mpc_msgs
+ DEPENDS multicopter_mpc crocoddyl pinocchio
 )
 
 ###########
@@ -89,13 +122,17 @@ CATKIN_DEPENDS std_msgs geometry_msgs multicopter_mpc_msgs
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
-# ${catkin_INCLUDE_DIRS}
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${multicopter_mpc_INCLUDE_DIRS}
+  ${PINOCCHIO_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
+  ${CROCODDYL_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/multicopter_mpc_msgs.cpp
+#   src/${PROJECT_NAME}/multicopter_mpc_ros.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -106,7 +143,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/multicopter_mpc_msgs_node.cpp)
+add_executable(mpc_runner_node src/mpc_runner.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -119,28 +156,22 @@ include_directories(
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(mpc_runner_node
+  ${catkin_LIBRARIES}
+  multicopter_mpc
+  ${CROCODDYL_LIBRARIES}
+  ${PINOCCHIO_LIBRARIES}
+)
 
 #############
 ## Install ##
 #############
-catkin_install_python(PROGRAMS 
-scripts/trajectory_generation_viz.py 
-scripts/mpc_controller_viz.py 
-DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-
 
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-# catkin_install_python(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
@@ -175,7 +206,7 @@ DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_multicopter_mpc_msgs.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_ros_multicopter_mpc.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
