@@ -6,9 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /TrajectoryGenerated1
         - /TrajectoryGenerated1/Center of Mass1
-        - /TrajectoryState1
         - /TrajectoryState1/Thrusts1
         - /ControllerTrajectory1/Center of Mass1
         - /ControllerTrajectory1/Waypoints1
@@ -122,7 +120,7 @@ Visualization Manager:
         Alpha: 1
         Enable: true
     - Class: multicopter_mpc_rviz_plugins/WholeBodyState
-      Enabled: true
+      Enabled: false
       Links:
         All Links Enabled: true
         Expand Joint Details: false
@@ -176,7 +174,7 @@ Visualization Manager:
         Shaft Radius: 0.009999999776482582
       Topic: /trajectory_generation/whole_body_state
       Unreliable: false
-      Value: true
+      Value: false
     - Center of Mass:
         Alpha: 1
         Axes Scale: 2
@@ -377,7 +375,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 14.889646530151367
+      Distance: 9.16720962524414
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -385,17 +383,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -2.2657053470611572
-        Y: -2.0226922035217285
-        Z: 0.2779829502105713
+        X: 0.3183239996433258
+        Y: 3.2314045429229736
+        Z: 0.6034151315689087
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.3203980624675751
+      Pitch: 0.21539810299873352
       Target Frame: <Fixed Frame>
-      Yaw: 0.6003987789154053
+      Yaw: 5.773584365844727
     Saved: ~
 Window Geometry:
   Displays:

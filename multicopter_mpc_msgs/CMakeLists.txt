@@ -20,6 +20,7 @@ add_message_files(
   FloatingBaseState.msg
   Mission.msg
   MotorsState.msg
+  SolverPerformance.msg
   Thrust.msg
   Waypoint.msg
   WholeBodyState.msg

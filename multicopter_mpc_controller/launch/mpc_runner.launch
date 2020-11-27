@@ -1,55 +1,55 @@
 <launch>
   <!-- ARGUMENTS -->
   <!-- robot related -->
-  <arg name="namespace" default="mpc_controller"/>
-  <arg name="mpc_runner_node" value="mpc_runner_node"/>
-  <arg name="mav_name" value="iris"/>
-  <arg name="model" default="$(find example-robot-data)/robots/iris_description/robots/iris_simple.urdf"/>
-  <arg name="groundtruth" value="false"/>
+  <arg name="namespace" default="mpc_controller" />
+  <arg name="mpc_runner_node" value="mpc_runner_node" />
+  <arg name="namespace_trajectory_generation" value="trajectory_generation" />
+  <arg name="mav_name" value="iris" />
+  <arg name="model" default="$(find example-robot-data)/robots/iris_description/robots/iris_simple.urdf" />
 
-  <!-- MPC related -->
-  <arg name="mission" value="passthrough.yaml"/>
-  <arg name="use_internal_gains" value="false"/>
-  <arg name="motor_command_dt" value="0.004"/>
 
-  <arg name="namespace_trajectory_generation" value="trajectory_generation"/>
-  <arg name="trajectory_generation_yaml_path" default="$(find multicopter_mpc_yaml)/trajectory_generation/trajectory-generator.yaml"/>
-  
+  <arg name="groundtruth" value="false" />
+  <arg name="use_internal_gains" value="false" />
+  <arg name="motor_command_dt" value="0.004" />
+  <arg name="mission" value="passthrough.yaml" />
+  <arg name="trajectory_generation_yaml_name" default="trajectory-generator.yaml" />
+  <arg name="mpc_main_yaml_name" default="mpc-main.yaml" />
+  <arg name="record_solver" default="true" />
+
+
   <!-- rosbag related -->
-  <arg name="rosbag" value="true"/>
-  <!-- <arg name="bag_file" value="$(find multicopter_mpc_ros)/rosbags/$(arg mission).bag"/> -->
+  <arg name="rosbag" value="true" />
+  <arg name="bag_file" value="$(find multicopter_mpc_bag)/rosbags/$(arg mission).bag"/>
 
-  <!-- PARAMS LOADING -->
-
-  <!-- LAUNCHES -->
   <!-- simulator -->
   <include file="$(find multicopter_mpc_controller)/launch/simulator.launch" />
 
-  
   <group ns="$(arg namespace)">
-    <param name="mission_path" value="$(find multicopter_mpc_yaml)/missions/$(arg mission)" />
-    <param name="motor_command_dt" value="$(arg motor_command_dt)" />
+    <param name="mission_yaml_path" value="$(find multicopter_mpc_yaml)/missions/$(arg mission)" />
+    <param name="mpc_main_yaml_path" value="$(find multicopter_mpc_yaml)/mpc_main/$(arg mpc_main_yaml_name)" />
+    <param name="motor_command_dt" value="$(arg motor_command_dt)" if="$(arg use_internal_gains)" />
     <param name="use_internal_gains" value="$(arg use_internal_gains)" />
+    <param name="record_solver" value="$(arg record_solver)" />
 
     <node name="$(arg mpc_runner_node)" pkg="multicopter_mpc_controller" type="mpc_runner_node" output="screen">
-      <remap from="/odometry" to="/iris/ground_truth/odometry" if="$(arg groundtruth)"/>
-      <remap from="/odometry" to="/$(arg mav_name)/odometry_sensor1/odometry" unless="$(arg groundtruth)"/>
-      <remap from="/motor_speed" to="/$(arg mav_name)/command/motor_speed" />
+      <remap from="/odometry" to="/iris/ground_truth/odometry" if="$(arg groundtruth)" />
+      <remap from="/odometry" to="/$(arg mav_name)/odometry_sensor1/odometry" unless="$(arg groundtruth)" />
+      <remap from="/motor_command" to="/$(arg mav_name)/command/motor_speed" />
     </node>
   </group>
 
   <!-- Visualizer -->
   <include file="$(find multicopter_mpc_viz)/launch/trajectory_generator_viz.launch">
-    <arg name="namespace" value="$(arg namespace_trajectory_generation)"/>
-    <arg name="model" value="$(arg model)"/>
-    <arg name="mission" value="$(arg mission)"/>
-    <arg name="trajectory_generation_yaml_path" value="$(arg trajectory_generation_yaml_path)"/>
-    <arg name="launch_tools" value="false"/>
+    <arg name="namespace" value="$(arg namespace_trajectory_generation)" />
+    <arg name="model" value="$(arg model)" />
+    <arg name="mission" value="$(arg mission)" />
+    <arg name="trajectory_generation_yaml_name" value="$(arg trajectory_generation_yaml_name)" />
+    <arg name="launch_tools" value="false" />
   </include>
 
   <node type="rviz" name="rviz" pkg="rviz" args="-d $(find multicopter_mpc_controller)/rviz/mpc_runner.rviz" />
 
   <!-- auxiliary nodes -->
-  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="$(arg mpc_runner_node)_rqt_reconfigure"/>
-  <!-- <node name="record_node" pkg="rosbag" type="record" args="record -o $(arg bag_file) -a" if="$(arg rosbag)"/> -->
+  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="$(arg mpc_runner_node)_rqt_reconfigure" />
+  <node name="record_node" pkg="rosbag" type="record" args="record -o $(arg bag_file) -a" if="$(arg rosbag)"/>
 </launch>

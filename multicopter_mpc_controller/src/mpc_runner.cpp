@@ -5,23 +5,21 @@ MpcRunner::MpcRunner() {
   std::string mpc_controller_type;
   std::string mpc_main_yaml_path;
   bool use_internal_gains;
-  double time_step;
 
   // Parameters
-  nh_.param<std::string>(ros::this_node::getNamespace() + "/mission_path", mission_path, "");
-
+  nh_.param<std::string>(ros::this_node::getNamespace() + "/mission_yaml_path", mission_path, "");
+  nh_.param<std::string>(ros::this_node::getNamespace() + "/mpc_main_yaml_path", mpc_main_yaml_path, "");
   nh_.param<bool>(ros::this_node::getNamespace() + "/use_internal_gains", use_internal_gains, "false");
-  nh_.param<double>(ros::this_node::getNamespace() + "/motor_command_dt", motor_command_dt_, 0.01);
-
-  if (!use_internal_gains) {
-    mpc_main_yaml_path = "/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/mpc_main/mpc-main.yaml";
-  } else {
-    ROS_INFO("Using internal gains");
-    mpc_main_yaml_path = "/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/mpc_main/mpc-main.yaml";
-  }
+  nh_.param<bool>(ros::this_node::getNamespace() + "/record_solver", record_solver_, "false");
 
   // Mpc Controller
   mpc_main_ = multicopter_mpc::MpcMain(multicopter_mpc::MultiCopterTypes::Iris, mission_path, mpc_main_yaml_path);
+
+  if (use_internal_gains) {
+    nh_.param<double>(ros::this_node::getNamespace() + "/motor_command_dt", motor_command_dt_, 0.01);
+  } else {
+    motor_command_dt_ = mpc_main_.getMpcController()->getTimeStep();
+  }
 
   // States
   state_ = mpc_main_.getMpcController()->getStateMultibody()->zero();
@@ -44,30 +42,23 @@ MpcRunner::MpcRunner() {
   controller_started_ = false;
 
   // Subscribers
-  // subs_odom_ = nh_.subscribe("/odometry", 1, &MpcRunner::callbackOdometry, this,
-  // ros::TransportHints().tcpNoDelay());
-  subs_odom_ =
-      nh_.subscribe("/odometry", 1, &MpcRunner::callbackOdometryCascade, this, ros::TransportHints().tcpNoDelay());
-  // subs_motors_speed_ =
-  //     nh_.subscribe("/motors_speed", 1, &MpcRunner::callbackMotorSpeed, this, ros::TransportHints().tcpNoDelay());
-  std::cout << "herer!!" << std::endl;
+  if (use_internal_gains) {
+    subs_odom_ = nh_.subscribe("/odometry", 1, &MpcRunner::callbackOdometry, this, ros::TransportHints().tcpNoDelay());
+    timer_motor_command_ =
+        nh_.createTimer(ros::Duration(motor_command_dt_), &MpcRunner::callbackMotorCommandGains, this);
+    timer_mpc_solve_ = nh_.createTimer(ros::Duration(mpc_main_.getMpcController()->getTimeStep()),
+                                       &MpcRunner::callbackMpcSolve, this);
+    ROS_INFO_STREAM("Publishing motor control every: " << motor_command_dt_ << " seconds");
+  } else {
+    subs_odom_ =
+        nh_.subscribe("/odometry", 1, &MpcRunner::callbackOdometryCascade, this, ros::TransportHints().tcpNoDelay());
+  }
 
   // Publishers
-  pub_motor_command_ = nh_.advertise<mav_msgs::Actuators>("/motor_speed", 1);
-  pub_whole_body_state_ = nh_.advertise<multicopter_mpc_msgs::WholeBodyState>("/whole_body_state", 1);
-  // pub_motors_state_ = nh_.advertise<multicopter_mpc_msgs::MotorsState>("/motors_state", 10);
-
-  // Timers
-  if (use_internal_gains) {
-    // timer_motor_command_ =
-    //     nh_.createTimer(ros::Duration(motor_command_dt_), &MpcRunner::callbackMotorCommandGains, this);
-    // timer_mpc_solve_ = nh_.createTimer(ros::Duration(mpc_main_.getMpcController()->getTimeStep()),
-    //                                    &MpcRunner::callbackMpcSolve, this);
-    // ROS_INFO_STREAM("Publishing motor control every: " << motor_command_dt_ << " seconds");
-  } else {
-    // timer_motor_command_ = nh_.createTimer(ros::Duration(mpc_main_.getMpcController()->getTimeStep()),
-    //                                        &MpcRunner::callbackSolveAndPublish, this);
-    // ROS_INFO_STREAM("Publishing motor control every: " << motor_command_dt_ << " seconds");
+  pub_motor_command_ = nh_.advertise<mav_msgs::Actuators>("/motor_command", 1);
+  pub_whole_body_state_ = nh_.advertise<multicopter_mpc_msgs::WholeBodyState>("whole_body_state", 1);
+  if (record_solver_) {
+    pub_solver_performance_ = nh_.advertise<multicopter_mpc_msgs::SolverPerformance>("solver_performance", 1);
   }
 
   // RQT Config
@@ -106,12 +97,16 @@ void MpcRunner::callbackOdometryCascade(const nav_msgs::OdometryConstPtr &msg_od
     msg_whole_body_state_.floating_base.pose = msg_odometry->pose.pose;
     msg_whole_body_state_.floating_base.motion = msg_odometry->twist.twist;
 
+    if (record_solver_) {
+      solver_time_init_ = ros::WallTime::now();
+    }
     mpc_main_.runMpcStep(1);
     motors_speed_ = mpc_main_.getMotorsSpeed();
-
     if (ros::Duration(ros::Time::now() - control_time_).toSec() > 1.5 * mpc_main_.getMpcController()->getTimeStep()) {
       ROS_WARN("Control rate not accomplished!");
     }
+    control_time_ = ros::Time::now();
+    
     msg_actuators_.header.stamp = ros::Time::now();
     msg_actuators_.angular_velocities[0] = motors_speed_(0);
     msg_actuators_.angular_velocities[1] = motors_speed_(1);
@@ -119,16 +114,23 @@ void MpcRunner::callbackOdometryCascade(const nav_msgs::OdometryConstPtr &msg_od
     msg_actuators_.angular_velocities[3] = motors_speed_(3);
     pub_motor_command_.publish(msg_actuators_);
 
+    if (record_solver_) {
+      solver_duration_ = ros::WallTime::now() - solver_time_init_;
+      msg_solver_performance_.header.stamp = ros::Time::now();
+      msg_solver_performance_.final_cost = mpc_main_.getMpcController()->getSolver()->get_cost();
+      msg_solver_performance_.iters = mpc_main_.getMpcController()->getSolver()->get_iter();
+      msg_solver_performance_.solving_time.sec = solver_duration_.sec;
+      msg_solver_performance_.solving_time.nsec = solver_duration_.nsec;
+      msg_solver_performance_.state_initial.pose = msg_odometry->pose.pose;
+      msg_solver_performance_.state_initial.motion = msg_odometry->twist.twist;
+      pub_solver_performance_.publish(msg_solver_performance_);
+    }
+
     for (std::size_t i = 0; i < 4; ++i) {
       msg_whole_body_state_.thrusts[i].speed_command = motors_speed_(i);
     }
+    pub_whole_body_state_.publish(msg_whole_body_state_);
 
-    int cursor = mpc_main_.getCursor() - mpc_main_.getMpcController()->getKnots() - 1;
-    if (cursor < int(mpc_main_.getMpcController()->getTrajectoryGenerator()->getKnots())) {
-      pub_whole_body_state_.publish(msg_whole_body_state_);
-    }
-
-    control_time_ = ros::Time::now();
   }
 }
 

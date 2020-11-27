@@ -13,6 +13,7 @@
 #include "visualization_msgs/Marker.h"
 #include "multicopter_mpc_msgs/WholeBodyState.h"
 #include "multicopter_mpc_msgs/MotorsState.h"
+#include "multicopter_mpc_msgs/SolverPerformance.h"
 
 #include "multicopter_mpc_controller/ParamsConfig.h"
 #include "multicopter_mpc/mpc-main.hpp"
@@ -35,6 +36,7 @@ class MpcRunner {
   ros::Publisher pub_trajectory_;
   ros::Publisher pub_whole_body_state_;
   ros::Publisher pub_motors_state_;
+  ros::Publisher pub_solver_performance_;
 
   ros::Timer timer_motor_command_;
   ros::Timer timer_mpc_solve_;
@@ -44,6 +46,7 @@ class MpcRunner {
 
   mav_msgs::Actuators msg_actuators_;
   multicopter_mpc_msgs::WholeBodyState msg_whole_body_state_;
+  multicopter_mpc_msgs::SolverPerformance msg_solver_performance_;
 
   void callbackOdometry(const nav_msgs::OdometryConstPtr &msg_odometry);
   void callbackMotorCommand(const ros::TimerEvent &);
@@ -59,6 +62,7 @@ class MpcRunner {
 
   // MPC related
   double motor_command_dt_;
+  bool record_solver_;
 
   // state
   std::mutex mut_state_;
@@ -89,6 +93,10 @@ class MpcRunner {
   multicopter_mpc::MpcMain mpc_main_;
 
   ros::Time time_1_;
+
+  // Solver
+  ros::WallTime solver_time_init_;
+  ros::WallDuration solver_duration_;
 
   // Controller state machine
   bool controller_started_;
