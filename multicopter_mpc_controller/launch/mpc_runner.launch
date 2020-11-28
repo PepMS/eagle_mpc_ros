@@ -51,5 +51,5 @@
 
   <!-- auxiliary nodes -->
   <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="$(arg mpc_runner_node)_rqt_reconfigure" />
-  <node name="record_node" pkg="rosbag" type="record" args="record -o $(arg bag_file) -a" if="$(arg rosbag)"/>
+  <!-- <node name="record_node" pkg="rosbag" type="record" args="record -o $(arg bag_file) -a" if="$(arg rosbag)"/> -->
 </launch>

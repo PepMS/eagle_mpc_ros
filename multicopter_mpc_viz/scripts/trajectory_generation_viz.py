@@ -35,7 +35,7 @@ class Trajectory():
         self.trajectory.loadParameters(trajectory_generation_path)
         self.dt = self.trajectory.dt
         self.trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeBoxFDDP,
-                                      multicopter_mpc.IntegratorType.IntegratorTypeEuler, self.dt)
+                                      multicopter_mpc.IntegratorType.IntegratorTypeRK4, self.dt)
         self.trajectory.setSolverCallbacks(True)
 
     def compute(self):
