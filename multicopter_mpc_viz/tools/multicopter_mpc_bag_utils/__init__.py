@@ -4,6 +4,7 @@ import numpy as np
 import rosbag
 
 import multicopter_mpc
+from multicopter_mpc.utils.path import MULTICOPTER_MPC_MULTIROTOR_DIR
 
 
 class SolverPerformanceIndicator:
@@ -12,18 +13,32 @@ class SolverPerformanceIndicator:
         self.final_cost = 0.
         self.solving_time = 0.
         self.state_initial = np.zeros(13)
+        self.time = 0.
 
 
 class MulticopterBag:
-    def __init__(self, bag_name):
+    def __init__(self, bag_name, mission_path):
         if os.path.exists(bag_name):
             self.ros_bag = rosbag.Bag(bag_name)
         else:
             sys.exit("Bag " + bag_name + " does not exists")
 
+        self.mc_params = multicopter_mpc.MultiCopterBaseParams()
+        self.mc_params.fill(MULTICOPTER_MPC_MULTIROTOR_DIR + "/iris.yaml")
+
+        self.mission_path = mission_path
+        self.mission = multicopter_mpc.Mission(13)
+        self.mission.fillWaypoints(mission_path)
+
         self.solver_iters = []
         self.states = []
         self.controls = []
+        self.time = []
+
+        self.fillBagWholeBodyStateTrajectory()
+        self.fillSolverPerformanceIndicators()
+
+        self.time = [t - self.time[0] for t in self.time]
 
     def fillSolverPerformanceIndicators(self):
         solver_topic = "/mpc_controller/solver_performance"
@@ -46,31 +61,31 @@ class MulticopterBag:
             state[12] = msg.state_initial.motion.angular.z
 
             solver_iter.state_initial = state
-            solver_iter.solving_time = msg.solving_time
+            solver_iter.solving_time = msg.solving_time.secs + msg.solving_time.nsecs / 1e9
             solver_iter.iters = msg.iters
             solver_iter.final_cost = msg.final_cost
-
+            solver_iter.time = t.secs + t.nsecs / 1e9
             self.solver_iters.append(solver_iter)
 
     def fillBagWholeBodyStateTrajectory(self):
-        topic_name = "/mpc_controller/solver_performance"
+        topic_name = "/mpc_controller/whole_body_state"
         state_msgs = self.ros_bag.read_messages(topics=topic_name)
 
         for topic, msg, t in state_msgs:
             state = np.zeros(13)
-            state[0] = msg.centroidal.com_position.x
-            state[1] = msg.centroidal.com_position.y
-            state[2] = msg.centroidal.com_position.z
-            state[3] = msg.centroidal.base_orientation.x
-            state[4] = msg.centroidal.base_orientation.y
-            state[5] = msg.centroidal.base_orientation.z
-            state[6] = msg.centroidal.base_orientation.w
-            state[7] = msg.centroidal.com_velocity.x
-            state[8] = msg.centroidal.com_velocity.y
-            state[9] = msg.centroidal.com_velocity.z
-            state[10] = msg.centroidal.base_angular_velocity.x
-            state[11] = msg.centroidal.base_angular_velocity.y
-            state[12] = msg.centroidal.base_angular_velocity.z
+            state[0] = msg.floating_base.pose.position.x
+            state[1] = msg.floating_base.pose.position.y
+            state[2] = msg.floating_base.pose.position.z
+            state[3] = msg.floating_base.pose.orientation.x
+            state[4] = msg.floating_base.pose.orientation.y
+            state[5] = msg.floating_base.pose.orientation.z
+            state[6] = msg.floating_base.pose.orientation.w
+            state[7] = msg.floating_base.motion.linear.x
+            state[8] = msg.floating_base.motion.linear.y
+            state[9] = msg.floating_base.motion.linear.z
+            state[10] = msg.floating_base.motion.angular.x
+            state[11] = msg.floating_base.motion.angular.y
+            state[12] = msg.floating_base.motion.angular.z
 
             control = np.zeros(4)
             control[0] = msg.thrusts[0].speed_command**2 * self.mc_params.cf
@@ -78,11 +93,14 @@ class MulticopterBag:
             control[2] = msg.thrusts[2].speed_command**2 * self.mc_params.cf
             control[3] = msg.thrusts[3].speed_command**2 * self.mc_params.cf
 
-            self.states.append(state)
-            self.control.append(control)
+            time = t.secs + t.nsecs / 1e9
 
-    def problemReconstruction(self, mission_path, mpc_main_path):
-        self.mpc_main = multicopter_mpc.MpcMain(multicopter_mpc.MultiCopterType.Iris, mission_path, mpc_main_path)
+            self.states.append(state)
+            self.controls.append(control)
+            self.time.append(time)
+
+    def problemReconstruction(self, mpc_main_path):
+        self.mpc_main = multicopter_mpc.MpcMain(multicopter_mpc.MultiCopterType.Iris, self.mission_path, mpc_main_path)
 
         for idx_iter, s_iter in enumerate(self.solver_iters):
             self.mpc_main.setCurrentState(s_iter.state_initial)
