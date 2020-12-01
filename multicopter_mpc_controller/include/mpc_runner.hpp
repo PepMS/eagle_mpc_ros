@@ -15,6 +15,8 @@
 #include "multicopter_mpc_msgs/MotorsState.h"
 #include "multicopter_mpc_msgs/SolverPerformance.h"
 
+#include "crocoddyl/core/utils/timer.hpp"
+
 #include "multicopter_mpc_controller/ParamsConfig.h"
 #include "multicopter_mpc/mpc-main.hpp"
 
@@ -90,6 +92,7 @@ class MpcRunner {
   std::mutex mut_motors_state_;
   multicopter_mpc_msgs::MotorsState msg_motors_state_;
 
+  std::mutex mut_solver_;
   multicopter_mpc::MpcMain mpc_main_;
 
   ros::Time time_1_;
@@ -108,6 +111,7 @@ class MpcRunner {
 
   // Debug
   bool printed_;
+  crocoddyl::Timer timer_;
 };
 
 // #endif

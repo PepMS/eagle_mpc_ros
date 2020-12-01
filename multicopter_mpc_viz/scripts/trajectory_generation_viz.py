@@ -34,19 +34,16 @@ class Trajectory():
         self.trajectory = multicopter_mpc.TrajectoryGenerator(self.uav_model, self.mc_params, self.mission)
         self.trajectory.loadParameters(trajectory_generation_path)
         self.dt = self.trajectory.dt
-        self.trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeBoxFDDP,
-                                      multicopter_mpc.IntegratorType.IntegratorTypeRK4, self.dt)
+        self.trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeSquashBoxFDDP,
+                                      multicopter_mpc.IntegratorType.IntegratorTypeEuler, self.dt)
         self.trajectory.setSolverCallbacks(True)
 
     def compute(self):
-        state_guess = self.mission.interpolateTrajectory("cold")
-        control = pinocchio.utils.zero(4)
-        control_guess = [control for _ in range(0, len(state_guess) - 1)]
         self.trajectory.setSolverIters(100)
         self.trajectory.setSolverCallbacks(True)
-        self.trajectory.solve(state_guess, control_guess)
+        self.trajectory.solve()
 
-        return self.trajectory.solver.xs, self.trajectory.solver.us
+        return self.trajectory.states, self.trajectory.controls
 
 
 class TrajectoryNode():

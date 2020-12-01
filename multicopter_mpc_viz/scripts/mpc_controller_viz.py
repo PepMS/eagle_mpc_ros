@@ -42,7 +42,7 @@ class MpcController():
             for i in range(0, self.N_traj):
                 self.mpc_main.setCurrentState(self.simulator.states[-1])
                 self.mpc_main.runMpcStep(0)
-                control = np.copy(self.mpc_main.mpc_controller.getControls(0))
+                control = np.copy(self.mpc_main.mpc_controller.controls[0])
                 self.simulator.simulateStep(control)
                 self.xss.append(self.mpc_main.mpc_controller.solver.xs)
                 self.uss.append(self.mpc_main.mpc_controller.solver.us)

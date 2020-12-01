@@ -100,8 +100,12 @@ void MpcRunner::callbackOdometryCascade(const nav_msgs::OdometryConstPtr &msg_od
     if (record_solver_) {
       solver_time_init_ = ros::WallTime::now();
     }
+    mut_solver_.lock();
+    timer_.reset();
     mpc_main_.runMpcStep(1);
+    // std::cout << "This is the solving time: " << timer_.get_us_duration() << std::endl;
     motors_speed_ = mpc_main_.getMotorsSpeed();
+    mut_solver_.unlock();
     if (ros::Duration(ros::Time::now() - control_time_).toSec() > 1.5 * mpc_main_.getMpcController()->getTimeStep()) {
       ROS_WARN("Control rate not accomplished!");
     }

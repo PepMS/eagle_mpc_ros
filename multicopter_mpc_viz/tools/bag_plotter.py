@@ -7,8 +7,8 @@ import multicopter_mpc_bag_utils
 
 BAG_PATH = '/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_bag/rosbags'
 
-bag_list = ['passthrough_euler_dt10_n100', 'passthrough_rk4_dt10_n100', 'passthrough_rk4_dt20_n50']
-legend = ['Euler, dt=10, N=100', 'RK4, dt=10, N=100', 'RK4, dt=20, N=50']
+bag_list = ['passthrough_euler_dt10_n100', 'passthrough_euler_dt10_n100_sb']
+legend = ['Euler, dt=10, N=100', 'Euler, dt=10, N=100, sb']
 
 MISSION_NAME = "passthrough"
 
