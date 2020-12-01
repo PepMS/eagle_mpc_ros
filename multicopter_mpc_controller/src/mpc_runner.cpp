@@ -43,22 +43,21 @@ MpcRunner::MpcRunner() {
 
   // Subscribers
   if (use_internal_gains) {
-    subs_odom_ = nh_.subscribe("/odometry", 1, &MpcRunner::callbackOdometry, this, ros::TransportHints().tcpNoDelay());
-    timer_motor_command_ =
-        nh_.createTimer(ros::Duration(motor_command_dt_), &MpcRunner::callbackMotorCommandGains, this);
+    subs_odom_ =
+        nh_.subscribe("/odometry", 1, &MpcRunner::callbackOdometryGains, this, ros::TransportHints().tcpNoDelay());
     timer_mpc_solve_ = nh_.createTimer(ros::Duration(mpc_main_.getMpcController()->getTimeStep()),
                                        &MpcRunner::callbackMpcSolve, this);
     ROS_INFO_STREAM("Publishing motor control every: " << motor_command_dt_ << " seconds");
   } else {
     subs_odom_ =
-        nh_.subscribe("/odometry", 1, &MpcRunner::callbackOdometryCascade, this, ros::TransportHints().tcpNoDelay());
+        nh_.subscribe("/odometry", 1, &MpcRunner::callbackOdometryMpc, this, ros::TransportHints().tcpNoDelay());
   }
 
   // Publishers
   pub_motor_command_ = nh_.advertise<mav_msgs::Actuators>("/motor_command", 1);
-  pub_whole_body_state_ = nh_.advertise<multicopter_mpc_msgs::WholeBodyState>("whole_body_state", 1);
   if (record_solver_) {
     pub_solver_performance_ = nh_.advertise<multicopter_mpc_msgs::SolverPerformance>("solver_performance", 1);
+    pub_whole_body_state_ = nh_.advertise<multicopter_mpc_msgs::WholeBodyState>("whole_body_state", 1);
   }
 
   // RQT Config
@@ -70,7 +69,7 @@ MpcRunner::MpcRunner() {
 
 MpcRunner::~MpcRunner() {}
 
-void MpcRunner::callbackOdometryCascade(const nav_msgs::OdometryConstPtr &msg_odometry) {
+void MpcRunner::callbackOdometryMpc(const nav_msgs::OdometryConstPtr &msg_odometry) {
   mut_state_.lock();
   state_(0) = msg_odometry->pose.pose.position.x;
   state_(1) = msg_odometry->pose.pose.position.y;
@@ -93,24 +92,16 @@ void MpcRunner::callbackOdometryCascade(const nav_msgs::OdometryConstPtr &msg_od
     mpc_main_.setCurrentState(state_);
     mut_state_.unlock();
 
-    msg_whole_body_state_.header.stamp = ros::Time::now();
-    msg_whole_body_state_.floating_base.pose = msg_odometry->pose.pose;
-    msg_whole_body_state_.floating_base.motion = msg_odometry->twist.twist;
-
     if (record_solver_) {
       solver_time_init_ = ros::WallTime::now();
     }
-    mut_solver_.lock();
-    timer_.reset();
     mpc_main_.runMpcStep(1);
-    // std::cout << "This is the solving time: " << timer_.get_us_duration() << std::endl;
     motors_speed_ = mpc_main_.getMotorsSpeed();
-    mut_solver_.unlock();
-    if (ros::Duration(ros::Time::now() - control_time_).toSec() > 1.5 * mpc_main_.getMpcController()->getTimeStep()) {
+    if (ros::Duration(ros::Time::now() - control_last_).toSec() > 1.5 * mpc_main_.getMpcController()->getTimeStep()) {
       ROS_WARN("Control rate not accomplished!");
     }
-    control_time_ = ros::Time::now();
-    
+    control_last_ = ros::Time::now();
+
     msg_actuators_.header.stamp = ros::Time::now();
     msg_actuators_.angular_velocities[0] = motors_speed_(0);
     msg_actuators_.angular_velocities[1] = motors_speed_(1);
@@ -128,17 +119,19 @@ void MpcRunner::callbackOdometryCascade(const nav_msgs::OdometryConstPtr &msg_od
       msg_solver_performance_.state_initial.pose = msg_odometry->pose.pose;
       msg_solver_performance_.state_initial.motion = msg_odometry->twist.twist;
       pub_solver_performance_.publish(msg_solver_performance_);
-    }
 
-    for (std::size_t i = 0; i < 4; ++i) {
-      msg_whole_body_state_.thrusts[i].speed_command = motors_speed_(i);
+      msg_whole_body_state_.header.stamp = msg_odometry->header.stamp;
+      msg_whole_body_state_.floating_base.pose = msg_odometry->pose.pose;
+      msg_whole_body_state_.floating_base.motion = msg_odometry->twist.twist;
+      for (std::size_t i = 0; i < 4; ++i) {
+        msg_whole_body_state_.thrusts[i].speed_command = motors_speed_(i);
+      }
+      pub_whole_body_state_.publish(msg_whole_body_state_);
     }
-    pub_whole_body_state_.publish(msg_whole_body_state_);
-
   }
 }
 
-void MpcRunner::callbackOdometry(const nav_msgs::OdometryConstPtr &msg_odometry) {
+void MpcRunner::callbackOdometryGains(const nav_msgs::OdometryConstPtr &msg_odometry) {
   mut_state_.lock();
   state_(0) = msg_odometry->pose.pose.position.x;
   state_(1) = msg_odometry->pose.pose.position.y;
@@ -155,137 +148,7 @@ void MpcRunner::callbackOdometry(const nav_msgs::OdometryConstPtr &msg_odometry)
   state_(12) = msg_odometry->twist.twist.angular.z;
   state_time_ = msg_odometry->header.stamp;
   mut_state_.unlock();
-}
 
-void MpcRunner::callbackMotorSpeed(const mav_msgs::ActuatorsConstPtr &msg_motor_speed) {
-  mut_motors_state_.lock();
-  msg_motors_state_.header.stamp = ros::Time::now();
-  msg_motors_state_.thrusts[0].speed_reading = msg_motor_speed->angular_velocities[0];
-  msg_motors_state_.thrusts[1].speed_reading = msg_motor_speed->angular_velocities[1];
-  msg_motors_state_.thrusts[2].speed_reading = -msg_motor_speed->angular_velocities[2];
-  msg_motors_state_.thrusts[3].speed_reading = -msg_motor_speed->angular_velocities[3];
-  pub_motors_state_.publish(msg_motors_state_);
-  mut_motors_state_.unlock();
-}
-
-void MpcRunner::callbackMotorCommand(const ros::TimerEvent &) {
-  if (controller_started_) {
-    msg_actuators_.header.stamp = ros::Time::now();
-    msg_actuators_.angular_velocities[0] = motors_speed_(0);
-    msg_actuators_.angular_velocities[1] = motors_speed_(1);
-    msg_actuators_.angular_velocities[2] = motors_speed_(2);
-    msg_actuators_.angular_velocities[3] = motors_speed_(3);
-    pub_motor_command_.publish(msg_actuators_);
-
-    mut_state_.lock();
-    mpc_main_.setCurrentState(state_);
-    state_used_time_ = state_time_;
-    ros::Duration elapsed = ros::Time::now() - state_time_;
-    ROS_INFO("State use in control was %lf seconds before", elapsed.toSec());
-    mut_state_.unlock();
-
-    mpc_main_.runMpcStep();
-    if (mpc_main_.getMpcController()->getSolver()->get_stop() > 1e-4) {
-      ROS_WARN("Big stop value: %f", mpc_main_.getMpcController()->getSolver()->get_stop());
-    }
-
-    motors_speed_ = mpc_main_.getMotorsSpeed();
-    if (ros::Duration(ros::Time::now() - control_time_).toSec() > 0.004) {
-      ROS_WARN("Control rate not accomplished!");
-    }
-
-    control_time_ = ros::Time::now();
-  }
-}
-
-void MpcRunner::callbackPublishAndSolve(const ros::TimerEvent &) {
-  // equivalent to callbackMotorCommand
-  if (controller_started_) {
-    msg_actuators_.header.stamp = ros::Time::now();
-    msg_actuators_.angular_velocities[0] = motors_speed_(0);
-    msg_actuators_.angular_velocities[1] = motors_speed_(1);
-    msg_actuators_.angular_velocities[2] = motors_speed_(2);
-    msg_actuators_.angular_velocities[3] = motors_speed_(3);
-    pub_motor_command_.publish(msg_actuators_);
-
-    mut_state_.lock();
-    mpc_main_.setCurrentState(state_);
-    state_used_time_ = state_time_;
-    ros::Duration elapsed = ros::Time::now() - state_time_;
-    ROS_INFO("State use in control was %lf seconds before", elapsed.toSec());
-    mut_state_.unlock();
-
-    mpc_main_.runMpcStep();
-    if (mpc_main_.getMpcController()->getSolver()->get_stop() > 1e-4) {
-      ROS_WARN("Big stop value: %f", mpc_main_.getMpcController()->getSolver()->get_stop());
-    }
-
-    motors_speed_ = mpc_main_.getMotorsSpeed();
-    if (ros::Duration(ros::Time::now() - control_time_).toSec() > 0.004) {
-      ROS_WARN("Control rate not accomplished!");
-    }
-
-    control_time_ = ros::Time::now();
-  }
-}
-
-void MpcRunner::callbackSolveAndPublish(const ros::TimerEvent &) {
-  if (controller_started_) {
-    mut_state_.lock();
-
-    mpc_main_.setCurrentState(state_);
-    state_used_time_ = state_time_;
-    ros::Duration elapsed = ros::Time::now() - state_time_;
-    msg_whole_body_state_.header.stamp = ros::Time::now();
-    msg_whole_body_state_.floating_base.pose.position.x = state_(0);
-    msg_whole_body_state_.floating_base.pose.position.y = state_(1);
-    msg_whole_body_state_.floating_base.pose.position.z = state_(2);
-    msg_whole_body_state_.floating_base.pose.orientation.x = state_(3);
-    msg_whole_body_state_.floating_base.pose.orientation.y = state_(4);
-    msg_whole_body_state_.floating_base.pose.orientation.z = state_(5);
-    msg_whole_body_state_.floating_base.pose.orientation.w = state_(6);
-    msg_whole_body_state_.floating_base.motion.linear.x = state_(7);
-    msg_whole_body_state_.floating_base.motion.linear.y = state_(8);
-    msg_whole_body_state_.floating_base.motion.linear.z = state_(9);
-    msg_whole_body_state_.floating_base.motion.angular.x = state_(10);
-    msg_whole_body_state_.floating_base.motion.angular.y = state_(11);
-    msg_whole_body_state_.floating_base.motion.angular.z = state_(12);
-
-    mut_state_.unlock();
-
-    mpc_main_.runMpcStep();
-
-    motors_speed_ = mpc_main_.getMotorsSpeed();
-    if (ros::Duration(ros::Time::now() - control_time_).toSec() > 0.004) {
-      ROS_WARN("Control rate not accomplished!");
-    }
-    msg_actuators_.header.stamp = ros::Time::now();
-    msg_actuators_.angular_velocities[0] = motors_speed_(0);
-    msg_actuators_.angular_velocities[1] = motors_speed_(1);
-    msg_actuators_.angular_velocities[2] = motors_speed_(2);
-    msg_actuators_.angular_velocities[3] = motors_speed_(3);
-    pub_motor_command_.publish(msg_actuators_);
-
-    // mut_motors_state_.lock();
-    // msg_motors_state_.thrusts[0].speed_command = motors_speed_(0);
-    // msg_motors_state_.thrusts[1].speed_command = motors_speed_(1);
-    // msg_motors_state_.thrusts[2].speed_command = motors_speed_(2);
-    // msg_motors_state_.thrusts[3].speed_command = motors_speed_(3);
-    // mut_motors_state_.unlock();
-
-    for (std::size_t i = 0; i < 4; ++i) {
-      msg_whole_body_state_.thrusts[i].speed_command = motors_speed_(i);
-    }
-
-    int cursor = mpc_main_.getCursor() - mpc_main_.getMpcController()->getKnots() - 1;
-    if (cursor < int(mpc_main_.getMpcController()->getTrajectoryGenerator()->getKnots())) {
-      pub_whole_body_state_.publish(msg_whole_body_state_);
-    }
-    control_time_ = ros::Time::now();
-  }
-}
-
-void MpcRunner::callbackMotorCommandGains(const ros::TimerEvent &) {
   if (controller_started_) {
     if (flag_new_gains_) {
       mut_gains_.lock();
@@ -296,12 +159,11 @@ void MpcRunner::callbackMotorCommandGains(const ros::TimerEvent &) {
     }
 
     mut_state_.lock();
-    ros::Duration elapsed_time = ros::Time::now() - control_time_;
+    ros::Duration elapsed_time = ros::Time::now() - control_last_;
     if (elapsed_time > ros::Duration(motor_command_dt_)) {
-      // ROS_WARN("Motor commands: Outdated MPC solution: %f", elapsed_time.toSec());
+      ROS_WARN("Control rate not accomplished!");
     }
     mpc_main_.getMpcController()->getStateMultibody()->diff(state_ref_, state_, state_diff_);
-    // robot_state_->diff(state_ref_, state_, state_diff_);
     mut_state_.unlock();
 
     mut_control_.lock();
@@ -334,7 +196,7 @@ void MpcRunner::callbackMpcSolve(const ros::TimerEvent &) {
     mpc_main_.runMpcStep();
 
     mut_gains_.lock();
-    control_time_ = ros::Time::now();
+    control_last_ = ros::Time::now();
     motors_thrust_new_ = mpc_main_.getMotorsThrust();
     fb_gains_new_ = mpc_main_.getFeedBackGains();
     flag_new_gains_ = true;
