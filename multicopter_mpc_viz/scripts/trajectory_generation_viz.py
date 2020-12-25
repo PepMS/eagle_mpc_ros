@@ -2,8 +2,9 @@
 
 import rospy
 import rospkg
-
 import tf
+
+import numpy as np
 
 from dynamic_reconfigure.server import Server
 from multicopter_mpc_viz.cfg import VisualizationConfig
@@ -41,7 +42,9 @@ class Trajectory():
     def compute(self):
         self.trajectory.setSolverIters(100)
         self.trajectory.setSolverCallbacks(True)
-        self.trajectory.solve()
+        states = self.mission.interpolateTrajectory("SE3")
+        controls = [np.array([4])] * (len(states) - 1)
+        self.trajectory.solve(states, controls)
 
         return self.trajectory.states, self.trajectory.controls
 

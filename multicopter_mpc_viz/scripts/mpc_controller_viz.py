@@ -36,8 +36,8 @@ class MpcController():
 
         if bag_path == "":
             self.N_traj = self.mpc_main.mpc_controller.trajectory_generator.n_knots - 1
-            self.xs_ref = self.mpc_main.mpc_controller.trajectory_generator.getStateTrajectory(0, self.N_traj)
-            self.us_ref = self.mpc_main.mpc_controller.trajectory_generator.getControlTrajectory(0, self.N_traj - 1)
+            self.xs_ref = self.mpc_main.mpc_controller.trajectory_generator.states
+            self.us_ref = self.mpc_main.mpc_controller.trajectory_generator.controls
             self.simulator = simulator.AerialSimulator(self.mpc_main.mpc_controller.dt, self.xs_ref[0])
             for i in range(0, self.N_traj):
                 self.mpc_main.setCurrentState(self.simulator.states[-1])

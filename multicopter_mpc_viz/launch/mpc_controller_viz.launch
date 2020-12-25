@@ -4,7 +4,7 @@
   <arg name="namespace_controller" value="mpc_controller"/>
   <arg name="namespace_trajectory_generation" value="trajectory_generation"/>
   <arg name="model" default="$(find example-robot-data)/robots/iris_description/robots/iris_simple.urdf"/>
-  <arg name="mission" default="passthrough.yaml"/>
+  <arg name="mission" default="loop.yaml"/>
   <arg name="mpc_main_yaml_name" default="mpc-main.yaml"/>
   <arg name="trajectory_generation_yaml_name" default="trajectory-generator.yaml"/>
   <arg name="from_bag" default="false" />
