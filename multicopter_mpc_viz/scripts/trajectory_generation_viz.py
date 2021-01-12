@@ -42,9 +42,10 @@ class Trajectory():
     def compute(self):
         self.trajectory.setSolverIters(100)
         self.trajectory.setSolverCallbacks(True)
-        states = self.mission.interpolateTrajectory("SE3")
-        controls = [np.array([4])] * (len(states) - 1)
-        self.trajectory.solve(states, controls)
+        # states = self.mission.interpolateTrajectory("SE3")
+        # controls = [np.array([4])] * (len(states) - 1)
+        # self.trajectory.solve(states, controls)
+        self.trajectory.solve()
 
         return self.trajectory.states, self.trajectory.controls
 

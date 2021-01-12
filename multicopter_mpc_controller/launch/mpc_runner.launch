@@ -10,7 +10,7 @@
   <arg name="groundtruth" value="false" />
   <arg name="use_internal_gains" value="false" />
   <arg name="motor_command_dt" value="0.004" />
-  <arg name="mission" value="loop.yaml" />
+  <arg name="mission" value="passthrough.yaml" />
   <arg name="trajectory_generation_yaml_name" default="trajectory-generator.yaml" />
   <arg name="mpc_main_yaml_name" default="mpc-main.yaml" />
   <arg name="record_solver" default="true" />
