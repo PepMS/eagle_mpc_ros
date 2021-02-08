@@ -5,11 +5,11 @@ import copy
 
 
 class WholeBodyStateInterface():
-    def __init__(self, model, mc_params, frame_id="world"):
+    def __init__(self, model, platform_params, frame_id="world"):
         print()
         self._model = model
         self._data = self._model.createData()
-        self._mc_params = mc_params
+        self._platform_params = platform_params
         self.frame_id = frame_id
         self._msg = WholeBodyState()
         self._msg.header.frame_id = frame_id
@@ -21,7 +21,7 @@ class WholeBodyStateInterface():
         if v is None:
             v = np.zeros(self._model.nv)
         if thrusts is None:
-            thrusts = np.zeros(self._mc_params.n_rotors)
+            thrusts = np.zeros(self._platform_params.n_rotors)
 
         n_rotors = np.size(thrusts)
 
@@ -43,25 +43,25 @@ class WholeBodyStateInterface():
         self._msg.floating_base.motion.angular.x = v[3]
         self._msg.floating_base.motion.angular.y = v[4]
         self._msg.floating_base.motion.angular.z = v[5]
-        # Thrusts
-        if rotor_names is not None:
-            self._msg.thrusts = []
-            pinocchio.forwardKinematics(self._model, self._data, q, v)
-            for i in range(n_rotors):
-                frame_id = self._model.getFrameId(rotor_names[i])
-                oMf = pinocchio.updateFramePlacement(self._model, self._data, frame_id)
-                pose = pinocchio.SE3ToXYZQUAT(oMf)
-                th = Thrust()
-                th.pose.position.x = pose[0]
-                th.pose.position.y = pose[1]
-                th.pose.position.z = pose[2]
-                th.pose.orientation.x = pose[3]
-                th.pose.orientation.y = pose[4]
-                th.pose.orientation.z = pose[5]
-                th.pose.orientation.w = pose[6]
-                th.thrust_command = thrusts[i]
-                th.thrust_min = self._mc_params.min_thrust
-                th.thrust_max = self._mc_params.max_thrust
-                self._msg.thrusts.append(th)
+        # Thrusts        
+        self._msg.thrusts = []
+        pinocchio.forwardKinematics(self._model, self._data, q, v)
+        frame_id = self._model.getFrameId("base_link")
+        iMbl = pinocchio.updateFramePlacement(self._model, self._data, frame_id)
+        for i in range(n_rotors):
+            th = Thrust()
+            iMrot = iMbl * self._platform_params.rotors_pose[i]
+            pose = pinocchio.SE3ToXYZQUAT(iMrot)
+            th.pose.position.x = pose[0]
+            th.pose.position.y = pose[1]
+            th.pose.position.z = pose[2]
+            th.pose.orientation.x = pose[3]
+            th.pose.orientation.y = pose[4]
+            th.pose.orientation.z = pose[5]
+            th.pose.orientation.w = pose[6]
+            th.thrust_command = thrusts[i]
+            th.thrust_min = self._platform_params.min_thrust
+            th.thrust_max = self._platform_params.max_thrust
+            self._msg.thrusts.append(th)
 
         return copy.deepcopy(self._msg)

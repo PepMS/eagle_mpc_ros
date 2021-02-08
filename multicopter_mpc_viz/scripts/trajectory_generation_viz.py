@@ -13,6 +13,7 @@ from multicopter_mpc_viz import WholeBodyStatePublisher
 from multicopter_mpc_viz import WholeBodyTrajectoryPublisher
 
 import pinocchio
+import crocoddyl
 import example_robot_data
 
 import multicopter_mpc
@@ -20,34 +21,21 @@ from multicopter_mpc.utils.path import MULTICOPTER_MPC_MULTIROTOR_DIR
 
 
 class Trajectory():
-    def __init__(self, mission_path, trajectory_generation_path):
-        self.uav = example_robot_data.loadIris()
-        self.uav_model = self.uav.model
-
-        # # UAV Params
-        self.mc_params = multicopter_mpc.MultiCopterBaseParams()
-        self.mc_params.fill(MULTICOPTER_MPC_MULTIROTOR_DIR + "/iris.yaml")
-
-        # Mission
-        self.mission = multicopter_mpc.Mission(self.uav.nq + self.uav.nv)
-        self.mission.fillWaypoints(mission_path)
-
-        self.trajectory = multicopter_mpc.TrajectoryGenerator(self.uav_model, self.mc_params, self.mission)
-        self.trajectory.loadParameters(trajectory_generation_path)
-        self.dt = self.trajectory.dt
-        self.trajectory.createProblem(multicopter_mpc.SolverType.SolverTypeSquashBoxFDDP,
-                                      multicopter_mpc.IntegratorType.IntegratorTypeEuler, self.dt)
-        self.trajectory.setSolverCallbacks(True)
+    def __init__(self, trajectory_name, trajectory_path):
+        self.trajectory = multicopter_mpc.Trajectory()
+        self.parserYaml = multicopter_mpc.ParserYaml(trajectory_name, trajectory_path)
+        self.paramsServer = multicopter_mpc.ParamsServer(self.parserYaml.params())
+        self.trajectory.autoSetup(self.paramsServer)
 
     def compute(self):
-        self.trajectory.setSolverIters(100)
-        self.trajectory.setSolverCallbacks(True)
-        # states = self.mission.interpolateTrajectory("SE3")
-        # controls = [np.array([4])] * (len(states) - 1)
-        # self.trajectory.solve(states, controls)
-        self.trajectory.solve()
+        self.initialState = self.trajectory.state.zero()
+        self.problem = self.trajectory.createProblem(10, True, self.initialState, "IntegratedActionModelEuler")
+        self.solver = multicopter_mpc.SolverSbFDDP(self.problem, self.trajectory.squash)
 
-        return self.trajectory.states, self.trajectory.controls
+        self.solver.setCallbacks([crocoddyl.CallbackVerbose()])
+        self.solver.solve([], [], 100)
+
+        return self.solver.xs, self.solver.us_squash
 
 
 class TrajectoryNode():
@@ -57,17 +45,18 @@ class TrajectoryNode():
         self.rate = rospy.Rate(100)
 
         rospack = rospkg.RosPack()
-        self.mission_path = rospy.get_param(rospy.get_namespace() + "/mission_path",
-                                            rospack.get_path('multicopter_mpc_yaml') + '/missions/takeoff.yaml')
-        self.trajectory_generation_yaml_path = rospy.get_param(
-            rospy.get_namespace() + "/trajectory_generation_yaml_path",
-            rospack.get_path('multicopter_mpc_yaml') + '/trajectory_generation/trajectory-generator.yaml')
 
-        self.trajectory = Trajectory(self.mission_path, self.trajectory_generation_yaml_path)
+        self.trajectory_name = rospy.get_param(
+            rospy.get_namespace() + "/trajectory_name",
+            rospack.get_path('multicopter_mpc_yaml') + '/trajectories/quad_hover.yaml')
+        self.trajectory_path = rospy.get_param(rospy.get_namespace() + "/trajectory_path",
+                                               rospack.get_path('multicopter_mpc_yaml') + '/trajectories')
+        self.trajectory = Trajectory(self.trajectory_name, self.trajectory_name)
+
         self.xs, self.us = self.trajectory.compute()
         self.us.append(self.us[-1])
 
-        self.rotor_names = ['iris__rotor_0', 'iris__rotor_1', 'iris__rotor_2', 'iris__rotor_3']
+        # self.rotor_names = ['rotor_0', 'rotor_1', 'rotor_2', 'rotor_3']
         self.continuous_player = False
         self.trajectory_percentage = 0.
         self.trj_idx = 0
@@ -81,14 +70,14 @@ class TrajectoryNode():
             self.ts.append(0.1)
 
         self.state_publisher = WholeBodyStatePublisher('whole_body_state',
-                                                       self.trajectory.uav_model,
-                                                       self.trajectory.mc_params,
+                                                       self.trajectory.trajectory.robot_model,
+                                                       self.trajectory.trajectory.platform_params,
                                                        frame_id="world")
-        self.trajectory_publisher = WholeBodyTrajectoryPublisher('whole_body_trajectory',
-                                                                 self.trajectory.uav_model,
-                                                                 self.trajectory.mc_params,
-                                                                 self.trajectory.mission,
-                                                                 frame_id="world")
+        # self.trajectory_publisher = WholeBodyTrajectoryPublisher('whole_body_trajectory',
+        #                                                          self.trajectory.trajectory.robot_model,
+        #                                                          self.trajectory.trajectory.platform_params,
+        #                                                          self.trajectory.mission,
+        #                                                          frame_id="world")
 
         self.trajectory_timer = rospy.Timer(rospy.Duration(2), self.callbackTrajectoryTimer)
         self.state_timer = rospy.Timer(rospy.Duration(0.1), self.callbackStateTimer)
@@ -111,7 +100,8 @@ class TrajectoryNode():
         self.br.sendTransform((0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "world", "map")
 
     def callbackTrajectoryTimer(self, timer):
-        self.trajectory_publisher.publish(self.ts, self.qs, self.vs)
+        # self.trajectory_publisher.publish(self.ts, self.qs, self.vs)
+        print()
 
     def callbackStateTimer(self, timer):
         x = self.xs[self.trj_idx]
@@ -121,7 +111,7 @@ class TrajectoryNode():
             else:
                 self.trj_idx = 0
 
-        self.state_publisher.publish(0.123, x[:7], x[7:], self.us[self.trj_idx], self.rotor_names)
+        self.state_publisher.publish(0.123, x[:7], x[7:], self.us[self.trj_idx])
         self.publishFixedTransform()
 
         if self.continuous_player:
