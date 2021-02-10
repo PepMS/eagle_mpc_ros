@@ -4,20 +4,14 @@ import rospy
 import rospkg
 import tf
 
-import numpy as np
-
 from dynamic_reconfigure.server import Server
 from multicopter_mpc_viz.cfg import VisualizationConfig
 
 from multicopter_mpc_viz import WholeBodyStatePublisher
 from multicopter_mpc_viz import WholeBodyTrajectoryPublisher
 
-import pinocchio
 import crocoddyl
-import example_robot_data
-
 import multicopter_mpc
-from multicopter_mpc.utils.path import MULTICOPTER_MPC_MULTIROTOR_DIR
 
 
 class Trajectory():
@@ -28,8 +22,7 @@ class Trajectory():
         self.trajectory.autoSetup(self.paramsServer)
 
     def compute(self):
-        self.initialState = self.trajectory.state.zero()
-        self.problem = self.trajectory.createProblem(10, True, self.initialState, "IntegratedActionModelEuler")
+        self.problem = self.trajectory.createProblem(10, True, "IntegratedActionModelEuler")
         self.solver = multicopter_mpc.SolverSbFDDP(self.problem, self.trajectory.squash)
 
         self.solver.setCallbacks([crocoddyl.CallbackVerbose()])
@@ -53,31 +46,35 @@ class TrajectoryNode():
                                                rospack.get_path('multicopter_mpc_yaml') + '/trajectories')
         self.trajectory = Trajectory(self.trajectory_name, self.trajectory_name)
 
+        namespace = rospy.get_namespace()
+        with open(self.trajectory.trajectory.robot_model_path, "r") as urdf_file:
+            urdf_string = urdf_file.read()
+
+        rospy.set_param(namespace + "/robot_description", urdf_string)
+
         self.xs, self.us = self.trajectory.compute()
         self.us.append(self.us[-1])
 
-        # self.rotor_names = ['rotor_0', 'rotor_1', 'rotor_2', 'rotor_3']
         self.continuous_player = False
         self.trajectory_percentage = 0.
         self.trj_idx = 0
 
         self.srv = Server(VisualizationConfig, self.callbackContinuousReproduction)
 
+        nq = self.trajectory.trajectory.robot_model.nq
         self.qs, self.vs, self.ts = [], [], []
         for x in self.xs:
-            self.qs.append(x[:7])
-            self.vs.append(x[7:])
+            self.qs.append(x[:nq])
+            self.vs.append(x[nq:])
             self.ts.append(0.1)
 
         self.state_publisher = WholeBodyStatePublisher('whole_body_state',
                                                        self.trajectory.trajectory.robot_model,
                                                        self.trajectory.trajectory.platform_params,
                                                        frame_id="world")
-        # self.trajectory_publisher = WholeBodyTrajectoryPublisher('whole_body_trajectory',
-        #                                                          self.trajectory.trajectory.robot_model,
-        #                                                          self.trajectory.trajectory.platform_params,
-        #                                                          self.trajectory.mission,
-        #                                                          frame_id="world")
+        self.trajectory_publisher = WholeBodyTrajectoryPublisher('whole_body_trajectory',
+                                                                 self.trajectory.trajectory,
+                                                                 frame_id="world")
 
         self.trajectory_timer = rospy.Timer(rospy.Duration(2), self.callbackTrajectoryTimer)
         self.state_timer = rospy.Timer(rospy.Duration(0.1), self.callbackStateTimer)
@@ -100,8 +97,8 @@ class TrajectoryNode():
         self.br.sendTransform((0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "world", "map")
 
     def callbackTrajectoryTimer(self, timer):
-        # self.trajectory_publisher.publish(self.ts, self.qs, self.vs)
-        print()
+        self.trajectory_publisher.publish(self.ts, self.qs, self.vs)
+        # print()
 
     def callbackStateTimer(self, timer):
         x = self.xs[self.trj_idx]
@@ -111,7 +108,9 @@ class TrajectoryNode():
             else:
                 self.trj_idx = 0
 
-        self.state_publisher.publish(0.123, x[:7], x[7:], self.us[self.trj_idx])
+        nq = self.trajectory.trajectory.robot_model.nq
+        nrotors = self.trajectory.trajectory.platform_params.n_rotors
+        self.state_publisher.publish(0.123, x[:nq], x[nq:], self.us[self.trj_idx][:nrotors], self.us[self.trj_idx][nrotors:])
         self.publishFixedTransform()
 
         if self.continuous_player:

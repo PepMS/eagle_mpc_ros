@@ -1,4 +1,4 @@
-from multicopter_mpc_msgs.msg import WholeBodyState, Thrust
+from multicopter_mpc_msgs.msg import WholeBodyState, Thrust, JointState
 import pinocchio
 import numpy as np
 import copy
@@ -14,7 +14,7 @@ class WholeBodyStateInterface():
         self._msg = WholeBodyState()
         self._msg.header.frame_id = frame_id
 
-    def writeToMessage(self, t, q, v=None, thrusts=None, rotor_names=None):
+    def writeToMessage(self, t, q, v=None, thrusts=None, tau=None, rotor_names=None):
         # self._msg.header.stamp = rospy.Time(t)
         self._msg.time = t
 
@@ -25,16 +25,12 @@ class WholeBodyStateInterface():
 
         n_rotors = np.size(thrusts)
 
-        pinocchio.centerOfMass(self._model, self._data, q, v)
-        c = self._data.com[0]
-        cd = self._data.vcom[0]
-        # Center of mass
-        self._msg.floating_base.pose.position.x = c[0]
-        self._msg.floating_base.pose.position.y = c[1]
-        self._msg.floating_base.pose.position.z = c[2]
-        self._msg.floating_base.motion.linear.x = cd[0]
-        self._msg.floating_base.motion.linear.y = cd[1]
-        self._msg.floating_base.motion.linear.z = cd[2]
+        self._msg.floating_base.pose.position.x = q[0]
+        self._msg.floating_base.pose.position.y = q[1]
+        self._msg.floating_base.pose.position.z = q[2]
+        self._msg.floating_base.motion.linear.x = v[0]
+        self._msg.floating_base.motion.linear.y = v[1]
+        self._msg.floating_base.motion.linear.z = v[2]
         # Base
         self._msg.floating_base.pose.orientation.x = q[3]
         self._msg.floating_base.pose.orientation.y = q[4]
@@ -43,7 +39,7 @@ class WholeBodyStateInterface():
         self._msg.floating_base.motion.angular.x = v[3]
         self._msg.floating_base.motion.angular.y = v[4]
         self._msg.floating_base.motion.angular.z = v[5]
-        # Thrusts        
+        # Thrusts
         self._msg.thrusts = []
         pinocchio.forwardKinematics(self._model, self._data, q, v)
         frame_id = self._model.getFrameId("base_link")
@@ -63,5 +59,16 @@ class WholeBodyStateInterface():
             th.thrust_min = self._platform_params.min_thrust
             th.thrust_max = self._platform_params.max_thrust
             self._msg.thrusts.append(th)
+
+        self._msg.joints = []
+        if tau is not None:
+            njoints = self._model.njoints - 2
+            for j in range(njoints):
+                joint = JointState()
+                joint.name = self._model.names[j + 2]
+                joint.position = q[7 + j]
+                joint.velocity = v[6 + j]
+                joint.effort = tau[j]
+                self._msg.joints.append(joint)
 
         return copy.deepcopy(self._msg)

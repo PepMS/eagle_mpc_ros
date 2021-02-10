@@ -1,43 +1,44 @@
 import rospy
 
 import pinocchio
+import crocoddyl
+import multicopter_mpc
 
-from multicopter_mpc_msgs.msg import WholeBodyTrajectory, Mission, Waypoint
+from multicopter_mpc_msgs.msg import WholeBodyTrajectory, Trajectory, Placement
 from .whole_body_interface import WholeBodyStateInterface
 
 
 class WholeBodyTrajectoryPublisher():
-    def __init__(self, topic, model, mc_params, mission, frame_id="world", queue_size=10):
+    def __init__(self, topic, trajectory, frame_id="world", queue_size=10):
         # Defining the subscriber
         self._pub = rospy.Publisher(topic, WholeBodyTrajectory, queue_size=queue_size)
-        self._wb_iface = WholeBodyStateInterface(model, mc_params, frame_id)
-        self._mission = mission
-        self.writeMissionMessage()
+        self._wb_iface = WholeBodyStateInterface(trajectory.robot_model, trajectory.platform_params, frame_id)
+        self._trajectory = trajectory
+        self._placements = []
+        for stage in self._trajectory.stages:
+            for cost in stage.cost_types.todict():
+                if stage.cost_types.todict()[cost] == multicopter_mpc.CostModelTypes.CostModelFramePlacement:
+                    self._placements.append(stage.costs.costs[cost].cost.reference.placement)
 
-    def writeMissionMessage(self):
-        self._mission_msg = Mission()
-        self._mission_msg.waypoints = []
+        self.writeTrajectoryMessage()
 
-        for wp in self._mission.waypoints:
-            waypoint = Waypoint()
-            waypoint.pose.position.x = wp.pose.translation[0]
-            waypoint.pose.position.y = wp.pose.translation[1]
-            waypoint.pose.position.z = wp.pose.translation[2]
-            
-            quat = pinocchio.Quaternion(wp.pose.rotation)
-            waypoint.pose.orientation.w = quat.w
-            waypoint.pose.orientation.x = quat.x
-            waypoint.pose.orientation.y = quat.y
-            waypoint.pose.orientation.z = quat.z
+    def writeTrajectoryMessage(self):
+        self._trajectory_msg = Trajectory()
+        self._trajectory_msg.placements = []
 
-            waypoint.motion.linear.x = wp.velocity.linear[0]
-            waypoint.motion.linear.y = wp.velocity.linear[1]
-            waypoint.motion.linear.z = wp.velocity.linear[2]
+        for place in self._placements:
+            placement = Placement()
+            placement.pose.position.x = place.translation[0]
+            placement.pose.position.y = place.translation[1]
+            placement.pose.position.z = place.translation[2]
 
-            waypoint.motion.angular.x = wp.velocity.angular[0]
-            waypoint.motion.angular.y = wp.velocity.angular[1]
-            waypoint.motion.angular.z = wp.velocity.angular[2]
-            self._mission_msg.waypoints.append(waypoint)
+            quat = pinocchio.Quaternion(place.rotation)
+            placement.pose.orientation.w = quat.w
+            placement.pose.orientation.x = quat.x
+            placement.pose.orientation.y = quat.y
+            placement.pose.orientation.z = quat.z
+
+            self._trajectory_msg.placements.append(placement)
 
     def publish(self, ts, qs, vs=None):
         msg = WholeBodyTrajectory()
@@ -54,11 +55,11 @@ class WholeBodyTrajectoryPublisher():
 
         msg.header.stamp = rospy.Time.now()
         msg.header.frame_id = self._wb_iface.frame_id
-        msg.mission = self._mission_msg
-        
+        msg.trajectory = self._trajectory_msg
+
         for i in range(len(ts)):
             vi = None
             if vs is not None:
                 vi = vs[i]
-            msg.trajectory.append(self._wb_iface.writeToMessage(ts[i], qs[i], vi))
+            msg.robot_state_trajectory.append(self._wb_iface.writeToMessage(ts[i], qs[i], vi))
         self._pub.publish(msg)
