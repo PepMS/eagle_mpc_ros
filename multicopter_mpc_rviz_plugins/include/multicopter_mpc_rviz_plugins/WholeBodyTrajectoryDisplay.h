@@ -19,6 +19,7 @@
 #include <rviz/robot/robot.h>
 #include <rviz/ogre_helpers/axes.h>
 #include <rviz/ogre_helpers/billboard_line.h>
+
 #include <multicopter_mpc_msgs/WholeBodyTrajectory.h>
 
 #include "multicopter_mpc_rviz_plugins/PointVisual.h"
@@ -88,15 +89,15 @@ class WholeBodyTrajectoryDisplay : public rviz::MessageFilterDisplay<multicopter
   void updateCoMEnable();
   void updateCoMStyle();
   void updateCoMLineProperties();
-  void updateWPEnable();
-  void updateWPProperties();
+  void updatePlacementEnable();
+  void updatePlacementProperties();
 
   void pushBackCoMAxes(const Ogre::Vector3 &axes_position, const Ogre::Quaternion &axes_orientation);
 
  private:
   void processTargetPosture();
   void processCoMTrajectory();
-  void processMission();
+  void processTrajectory();
 
   /** @brief Loads a URDF from the ros-param named by our
    * "Robot Description" property, iterates through the links, and
@@ -117,7 +118,7 @@ class WholeBodyTrajectoryDisplay : public rviz::MessageFilterDisplay<multicopter
   /** Properties to show on side panel */
   rviz::Property *target_category_;
   rviz::Property *com_category_;
-  rviz::Property *wp_category_;
+  rviz::Property *placement_category_;
   /**@}*/
 
   /**@{*/
@@ -127,7 +128,7 @@ class WholeBodyTrajectoryDisplay : public rviz::MessageFilterDisplay<multicopter
   boost::shared_ptr<rviz::BillboardLine> com_billboard_line_;
   std::vector<boost::shared_ptr<PointVisual>> com_points_;
   std::vector<boost::shared_ptr<rviz::Axes>> com_axes_;
-  std::vector<boost::shared_ptr<rviz::Axes>> wp_axes_;
+  std::vector<boost::shared_ptr<rviz::Axes>> placement_axes_;
   /**@}*/
 
   /**@{*/
@@ -143,8 +144,8 @@ class WholeBodyTrajectoryDisplay : public rviz::MessageFilterDisplay<multicopter
   rviz::FloatProperty *com_alpha_property_;
   rviz::FloatProperty *com_line_width_property_;
   rviz::FloatProperty *com_scale_property_;
-  rviz::BoolProperty *wp_enable_property_;
-  rviz::FloatProperty *wp_alpha_property_;
+  rviz::BoolProperty *placement_enable_property_;
+  rviz::FloatProperty *placement_alpha_property_;
   /**@}*/
 
   /**@{*/
@@ -166,7 +167,7 @@ class WholeBodyTrajectoryDisplay : public rviz::MessageFilterDisplay<multicopter
   bool target_enable_;
   bool com_enable_;
   bool com_axes_enable_;
-  bool wp_enable_;
+  bool placement_enable_;
   /**@}*/
 };
 
