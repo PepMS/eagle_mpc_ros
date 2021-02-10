@@ -14,7 +14,7 @@ Header header
 multicopter_mpc_msgs/WholeBodyState actual
 
 # The whole-body trajectory
-multicopter_mpc_msgs/WholeBodyState[] trajectory
+multicopter_mpc_msgs/WholeBodyState[] robot_state_trajectory
 
 # The mission it is trying to solve
-multicopter_mpc_msgs/Mission mission
+multicopter_mpc_msgs/Trajectory trajectory

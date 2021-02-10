@@ -1,0 +1,1 @@
+multicopter_mpc_msgs/Placement[] placements
