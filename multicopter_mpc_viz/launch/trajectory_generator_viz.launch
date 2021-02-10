@@ -1,19 +1,14 @@
 <?xml version="1.0"?>
 <launch>
-
   <arg name="namespace" default="trajectory_generation" />
-  <arg name="launch_tools" default="true" />
-  <arg name="model" default="$(find example-robot-data)/robots/iris_description/robots/iris_simple.urdf" />
-  <!-- <arg name="mission" default="passthrough.yaml" /> -->
-  <!-- <arg name="trajectory_generation_yaml_name" default="trajectory-generator.yaml" /> -->
+
+  <!-- <arg name="trajectory" default="am_eagle_catch.yaml" /> -->
   <arg name="trajectory" default="quad_passthrough.yaml" />
+  <arg name="launch_tools" default="true" />
 
   <group ns="$(arg namespace)">
-    <param name="robot_description" textfile="$(arg model)" />
-    <!-- <param name="mission_path" value="$(find multicopter_mpc_yaml)/missions/$(arg mission)" /> -->
     <param name="trajectory_name" value="$(find multicopter_mpc_yaml)/trajectories/$(arg trajectory)" />
     <param name="trajectory_path" value="$(find multicopter_mpc_yaml)/trajectories" />
-    <!-- <param name="trajectory_generation_yaml_path" value="$(find multicopter_mpc_yaml)/trajectory_generation/$(arg trajectory_generation_yaml_name)" /> -->
     <node pkg="multicopter_mpc_viz" name="tg_node" type="trajectory_generation_viz.py" output="screen" />
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find multicopter_mpc_viz)/rviz/trajectory_display.rviz" if="$(arg launch_tools)" />
     <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" if="$(arg launch_tools)" />
