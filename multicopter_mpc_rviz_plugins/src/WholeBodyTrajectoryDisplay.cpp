@@ -82,9 +82,9 @@ WholeBodyTrajectoryDisplay::WholeBodyTrajectoryDisplay()
 
   // Placement costs
   placement_enable_property_ = new BoolProperty("Enable", true, "Enable/disable the WP display", placement_category_,
-                                                SLOT(updateWPEnable()), this);
+                                                SLOT(updatePlacementEnable()), this);
   placement_alpha_property_ = new FloatProperty("Alpha", 1.0, "Amount of transparency to apply to the waypoints.",
-                                                placement_category_, SLOT(updateWPProperties()), this);
+                                                placement_category_, SLOT(updatePlacementProperties()), this);
   placement_alpha_property_->setMin(0.0);
   placement_alpha_property_->setMax(1.0);
 }
