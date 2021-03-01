@@ -15,11 +15,10 @@ import multicopter_mpc
 
 
 class Trajectory():
-    def __init__(self, trajectory_name, trajectory_path):
+    def __init__(self, trajectory_path):
         self.trajectory = multicopter_mpc.Trajectory()
-        self.parserYaml = multicopter_mpc.ParserYaml(trajectory_name, trajectory_path)
-        self.paramsServer = multicopter_mpc.ParamsServer(self.parserYaml.params())
-        self.trajectory.autoSetup(self.paramsServer)
+        # self.paramsServer = multicopter_mpc.ParamsServer(self.parserYaml.params())
+        self.trajectory.autoSetup(trajectory_path)
 
     def compute(self):
         self.problem = self.trajectory.createProblem(10, True, "IntegratedActionModelEuler")
@@ -39,12 +38,10 @@ class TrajectoryNode():
 
         rospack = rospkg.RosPack()
 
-        self.trajectory_name = rospy.get_param(
-            rospy.get_namespace() + "/trajectory_name",
+        self.trajectory_path = rospy.get_param(
+            rospy.get_namespace() + "/trajectory_path",
             rospack.get_path('multicopter_mpc_yaml') + '/trajectories/quad_hover.yaml')
-        self.trajectory_path = rospy.get_param(rospy.get_namespace() + "/trajectory_path",
-                                               rospack.get_path('multicopter_mpc_yaml') + '/trajectories')
-        self.trajectory = Trajectory(self.trajectory_name, self.trajectory_name)
+        self.trajectory = Trajectory(self.trajectory_path)
 
         namespace = rospy.get_namespace()
         with open(self.trajectory.trajectory.robot_model_path, "r") as urdf_file:
@@ -110,7 +107,8 @@ class TrajectoryNode():
 
         nq = self.trajectory.trajectory.robot_model.nq
         nrotors = self.trajectory.trajectory.platform_params.n_rotors
-        self.state_publisher.publish(0.123, x[:nq], x[nq:], self.us[self.trj_idx][:nrotors], self.us[self.trj_idx][nrotors:])
+        self.state_publisher.publish(0.123, x[:nq], x[nq:], self.us[self.trj_idx][:nrotors],
+                                     self.us[self.trj_idx][nrotors:])
         self.publishFixedTransform()
 
         if self.continuous_player:

@@ -1,27 +1,25 @@
 <?xml version="1.0"?>
 <launch>
 
-  <arg name="namespace_controller" value="mpc_controller"/>
+  
   <arg name="namespace_trajectory_generation" value="trajectory_generation"/>
-  <arg name="model" default="$(find example-robot-data)/robots/iris_description/robots/iris_simple.urdf"/>
-  <arg name="mission" default="passthrough.yaml"/>
-  <arg name="mpc_main_yaml_name" default="mpc-main.yaml"/>
-  <arg name="trajectory_generation_yaml_name" default="trajectory-generator.yaml"/>
+  <arg name="trajectory" default="quad_passthrough.yaml"/>
+
+  <arg name="namespace_controller" value="mpc_controller"/>
+  <arg name="mpc" default="mpc.yaml"/>
+
   <arg name="from_bag" default="false" />
   <arg name="bag_name" default="passthrough_euler_005.bag" />
-
+  
   <include file="$(find multicopter_mpc_viz)/launch/trajectory_generator_viz.launch">
     <arg name="namespace" value="$(arg namespace_trajectory_generation)"/>
-    <arg name="model" value="$(arg model)"/>
-    <arg name="mission" value="$(arg mission)"/>
-    <arg name="trajectory_generation_yaml_name" value="$(arg trajectory_generation_yaml_name)"/>
+    <arg name="trajectory" value="$(arg trajectory)"/>
     <arg name="launch_tools" value="false"/>
   </include>
 
   <group ns="$(arg namespace_controller)">
-    <param name="robot_description" textfile="$(arg model)" />
-    <param name="mission_path" value="$(find multicopter_mpc_yaml)/missions/$(arg mission)" />
-    <param name="mpc_main_yaml_path" value="$(find multicopter_mpc_yaml)/mpc_main/$(arg mpc_main_yaml_name)" />
+    <param name="trajectory_path" value="$(find multicopter_mpc_yaml)/trajectories/$(arg trajectory)" />
+    <param name="mpc_path" value="$(find multicopter_mpc_yaml)/mpc/$(arg mpc)" />
     <param name="dynamic_reconfigure_client" value="$(arg namespace_trajectory_generation)/tg_node" />
     <param name="bag_path" value="$(find multicopter_mpc_bag)/rosbags/$(arg bag_name)" if="$(arg from_bag)"/>
     
