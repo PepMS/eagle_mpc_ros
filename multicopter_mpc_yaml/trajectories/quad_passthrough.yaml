@@ -2,11 +2,12 @@ trajectory:
   robot:
     name: "iris"
     urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/iris_description/robots/iris_simple.urdf"
-    follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/iris_new.yaml"
-
+    follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/iris.yaml"
+  
   stages:
     - name: "nav_wp1"
       duration: 2000 #ms
+      transition: true
       costs:
         - name: "state_reg"
           type: "CostModelState"
@@ -23,7 +24,7 @@ trajectory:
           weights: [1, 1, 1, 1]
 
     - name: "wp1"
-      duration: 10 #ms
+      duration: 0 #ms
       costs:
         - name: "state_reg"
           type: "CostModelState"
@@ -55,6 +56,7 @@ trajectory:
 
     - name: "nav_wp2"
       duration: 1400 #ms
+      transition: true
       costs:
         - name: "state_reg"
           type: "CostModelState"
@@ -71,7 +73,7 @@ trajectory:
           weights: [1, 1, 1, 1]
 
     - name: "wp2"
-      duration: 10 #ms
+      duration: 0 #ms
       costs:
         - name: "state_reg"
           type: "CostModelState"
@@ -103,6 +105,7 @@ trajectory:
     
     - name: "nav_wp3"
       duration: 1500 #ms
+      transition: true
       costs:
         - name: "state_reg"
           type: "CostModelState"
