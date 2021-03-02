@@ -18,8 +18,7 @@ import numpy as np
 import crocoddyl
 
 import multicopter_mpc
-from multicopter_mpc.utils import simulator, CarrotMpc
-
+from multicopter_mpc.utils import simulator
 
 class MpcController():
     def __init__(self, trajectoryPath, mpcPath, bagPath=None):
@@ -33,8 +32,7 @@ class MpcController():
         solver.setCallbacks([crocoddyl.CallbackVerbose()])
         solver.solve([], [], maxiter=400)
 
-        self.mpcController = CarrotMpc(trajectory, solver.xs, dtTrajectory, mpcPath)
-        self.mpcController.createProblem_()
+        self.mpcController = multicopter_mpc.CarrotMpc(trajectory, solver.xs, dtTrajectory, mpcPath)
         self.mpcController.updateProblem(0)
         self.mpcController.solver.solve(solver.xs[:self.mpcController.problem.T + 1],
                                         solver.us[:self.mpcController.problem.T])
@@ -54,7 +52,8 @@ class MpcController():
             for i in range(0, self.nTraj):
                 self.mpcController.problem.x0 = self.simulator.states[-1]
                 self.mpcController.updateProblem(time)
-                self.mpcController.solver.solve(self.mpcController.solver.xs, self.mpcController.solver.us)
+                self.mpcController.solver.solve(self.mpcController.solver.xs, self.mpcController.solver.us,
+                                                self.mpcController.iters)
                 control = np.copy(self.mpcController.solver.us_squash[0])
                 self.simulator.simulateStep(control)
                 self.xss.append(self.mpcController.solver.xs)
@@ -124,9 +123,10 @@ class MpcControllerNode():
         self.us.append(self.us[-1])
 
         self.qs, self.vs, self.ts = [], [], []
+        nq = self.mpcController.mpcController.robot_model.nq
         for x in self.xs:
-            self.qs.append(x[:7])
-            self.vs.append(x[7:])
+            self.qs.append(x[:nq])
+            self.vs.append(x[nq:])
             self.ts.append(0.1)
 
         self.statePub = WholeBodyStatePublisher('whole_body_state',
