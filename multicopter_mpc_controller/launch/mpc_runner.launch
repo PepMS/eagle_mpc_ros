@@ -20,7 +20,7 @@
   <arg name="bag_file" value="$(find multicopter_mpc_bag)/rosbags/$(arg mission).bag"/>
 
   <!-- simulator -->
-  <include file="$(find multicopter_mpc_controller)/launch/simulator.launch" />
+  <include file="$(find multicopter_mpc_simulator)/launch/simulator.launch" />
 
   <group ns="$(arg namespace)">
     <param name="mission_yaml_path" value="$(find multicopter_mpc_yaml)/missions/$(arg mission)" />
