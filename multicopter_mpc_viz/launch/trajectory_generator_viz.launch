@@ -3,11 +3,11 @@
   <arg name="namespace" default="trajectory_generation" />
 
   <!-- <arg name="trajectory" default="am_eagle_catch.yaml" /> -->
-  <arg name="trajectory" default="quad_passthrough.yaml" />
+  <arg name="trajectory_config" default="quad_passthrough.yaml" />
   <arg name="launch_tools" default="true" />
 
   <group ns="$(arg namespace)">
-    <param name="trajectory_path" value="$(find multicopter_mpc_yaml)/trajectories/$(arg trajectory)" />
+    <param name="trajectory_path" value="$(find multicopter_mpc_yaml)/trajectories/$(arg trajectory_config)" />
     <node pkg="multicopter_mpc_viz" name="tg_node" type="trajectory_generation_viz.py" output="screen" />
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find multicopter_mpc_viz)/rviz/trajectory_display.rviz" if="$(arg launch_tools)" />
     <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" if="$(arg launch_tools)" />

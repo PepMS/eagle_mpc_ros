@@ -1,0 +1,4 @@
+<launch>
+  <env name="ROSCONSOLE_CONFIG_FILE" value="$(find multicopter_mpc_controller)/cfg/custom_rosconsole.conf" />
+  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find multicopter_mpc_controller)/rviz/mpc_runner.rviz" />
+</launch>

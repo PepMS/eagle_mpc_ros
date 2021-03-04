@@ -1,25 +1,23 @@
 <?xml version="1.0"?>
 <launch>
-
-  
   <arg name="namespace_trajectory_generation" value="trajectory_generation"/>
-  <arg name="trajectory" default="quad_passthrough.yaml"/>
+  <arg name="trajectory_config" default="quad_passthrough.yaml"/>
 
   <arg name="namespace_controller" value="mpc_controller"/>
-  <arg name="mpc" default="mpc.yaml"/>
+  <arg name="mpc_config" default="mpc.yaml"/>
 
   <arg name="from_bag" default="false" />
   <arg name="bag_name" default="passthrough_euler_005.bag" />
   
   <include file="$(find multicopter_mpc_viz)/launch/trajectory_generator_viz.launch">
     <arg name="namespace" value="$(arg namespace_trajectory_generation)"/>
-    <arg name="trajectory" value="$(arg trajectory)"/>
+    <arg name="trajectory" value="$(arg trajectory_config)"/>
     <arg name="launch_tools" value="false"/>
   </include>
 
   <group ns="$(arg namespace_controller)">
-    <param name="trajectory_path" value="$(find multicopter_mpc_yaml)/trajectories/$(arg trajectory)" />
-    <param name="mpc_path" value="$(find multicopter_mpc_yaml)/mpc/$(arg mpc)" />
+    <param name="trajectory_path" value="$(find multicopter_mpc_yaml)/trajectories/$(arg trajectory_config)" />
+    <param name="mpc_path" value="$(find multicopter_mpc_yaml)/mpc/$(arg mpc_config)" />
     <param name="dynamic_reconfigure_client" value="$(arg namespace_trajectory_generation)/tg_node" />
     <param name="bag_path" value="$(find multicopter_mpc_bag)/rosbags/$(arg bag_name)" if="$(arg from_bag)"/>
     
