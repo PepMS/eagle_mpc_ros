@@ -17,7 +17,6 @@ import multicopter_mpc
 class Trajectory():
     def __init__(self, trajectory_path):
         self.trajectory = multicopter_mpc.Trajectory()
-        # self.paramsServer = multicopter_mpc.ParamsServer(self.parserYaml.params())
         self.trajectory.autoSetup(trajectory_path)
 
     def compute(self):
@@ -47,7 +46,7 @@ class TrajectoryNode():
         with open(self.trajectory.trajectory.robot_model_path, "r") as urdf_file:
             urdf_string = urdf_file.read()
 
-        rospy.set_param(namespace + "/robot_description", urdf_string)
+        rospy.set_param(namespace + "robot_description", urdf_string)
 
         self.xs, self.us = self.trajectory.compute()
         self.us.append(self.us[-1])
