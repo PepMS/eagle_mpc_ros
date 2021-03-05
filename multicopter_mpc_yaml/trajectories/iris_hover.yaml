@@ -7,6 +7,7 @@ trajectory:
   stages:
     - name: "navigation"
       duration: 1100 #ms
+      transition: true
       costs:
         - name: "state_reg"
           type: "CostModelState"
@@ -38,3 +39,10 @@ trajectory:
           link_name: "iris__base_link"
           linear: [0, 0, 0]
           angular: [0, 0, 0]
+
+        - name: "control_reg"
+          type: "CostModelControl"
+          weight: 5e-2
+          reference: [0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1]

@@ -3,7 +3,9 @@
   <arg name="namespace" default="trajectory_generation" />
 
   <!-- <arg name="trajectory" default="am_eagle_catch.yaml" /> -->
-  <arg name="trajectory_config" default="quad_passthrough.yaml" />
+  <arg name="mav_name" default="hexacopter370"/>
+  <arg name="trajectory_name" default="hover" />
+  <arg name="trajectory_config" default="$(arg mav_name)_$(arg trajectory_name).yaml" />
   <arg name="launch_tools" default="true" />
 
   <group ns="$(arg namespace)">

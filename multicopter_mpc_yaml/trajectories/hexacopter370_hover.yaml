@@ -6,7 +6,8 @@ trajectory:
 
   stages:
     - name: "navigation"
-      duration: 1100 #ms
+      duration: 2000 #ms
+      transition: true
       costs:
         - name: "state_reg"
           type: "CostModelState"
@@ -25,6 +26,13 @@ trajectory:
     - name: "hover"
       duration: 0 #ms
       costs:
+        - name: "control_reg"
+          type: "CostModelControl"
+          weight: 5e-2
+          reference: [0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 1, 1, 1]
+
         - name: "placement_base_link"
           type: "CostModelFramePlacement"
           weight: 2000

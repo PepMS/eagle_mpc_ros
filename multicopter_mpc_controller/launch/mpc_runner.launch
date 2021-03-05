@@ -1,16 +1,16 @@
 <launch>
   <!-- ARGUMENTS -->
-  <arg name="mav_name" value="hexacopter370" />
+  <arg name="mav_name" default="hexacopter370" />
 
   <arg name="trajectory_namespace" default="trajectory_generation" />
-  <arg name="trajectory_name" default="hex_hover" />
+  <arg name="trajectory_name" default="hover" />
   <arg name="trajectory_dt" default="10" />
   <arg name="trajectory_solver" default="SolverSbFDDP" />
   <arg name="trajectory_integration" default="IntegratedActionModelEuler" />
 
   <arg name="mpc_type" default="carrot_mpc" />
   <arg name="namespace_mpc" default="$(arg mpc_type)" />
-  <arg name="mpc_config" default="mpc.yaml" />
+  <arg name="mpc_config" default="$(arg mav_name)_mpc.yaml" />
 
   <arg name="groundtruth" value="false" />
   <arg name="use_internal_gains" value="false" />
@@ -21,8 +21,6 @@
   <arg name="bag_file" value="$(find multicopter_mpc_bag)/rosbags/$(arg trajectory_name).bag" />
   <arg name="record_solver" default="true" />
 
-  
-  
   <!-- simulator -->
   <include file="$(find multicopter_mpc_simulator)/launch/simulator.launch">
     <arg name="mav_name" value="$(arg mav_name)" />
@@ -35,35 +33,38 @@
     <arg name="paused" default="false" />
     <arg name="arm_enable" default="false" />
   </include>
-  
+
   <group ns="$(arg namespace_mpc)">
-    <param name="trajectory_config" value="$(find multicopter_mpc_yaml)/trajectories/$(arg trajectory_name).yaml" />
+    <param name="trajectory_config" value="$(find multicopter_mpc_yaml)/trajectories/$(arg mav_name)_$(arg trajectory_name).yaml" />
     <param name="trajectory_dt" value="$(arg trajectory_dt)" />
     <param name="trajectory_solver" value="$(arg trajectory_solver)" />
     <param name="trajectory_integration" value="$(arg trajectory_integration)" />
-    
+
     <param name="mpc_config" value="$(find multicopter_mpc_yaml)/mpc/$(arg mpc_config)" />
-    
+
     <param name="use_internal_gains" value="$(arg use_internal_gains)" />
     <param name="record_solver" value="$(arg record_solver)" />
     <param name="motor_command_dt" value="$(arg motor_command_dt)" if="$(arg use_internal_gains)" />
-    
+
     <node name="$(arg mpc_type)" pkg="multicopter_mpc_controller" type="mpc_runner_node" output="screen">
       <remap from="/odometry" to="/$(arg mav_name)/ground_truth/odometry" if="$(arg groundtruth)" />
       <remap from="/odometry" to="/$(arg mav_name)/odometry_sensor1/odometry" unless="$(arg groundtruth)" />
       <remap from="/motor_command" to="/$(arg mav_name)/command/motor_speed" />
     </node>
-    
+
   </group>
-  
+
   <!-- Visualizer -->
   <include file="$(find multicopter_mpc_viz)/launch/trajectory_generator_viz.launch">
     <arg name="namespace" value="$(arg trajectory_namespace)" />
-    <arg name="trajectory_config" value="$(arg trajectory_name).yaml" />
+    <arg name="trajectory_config" value="$(arg mav_name)_$(arg trajectory_name).yaml" />
     <arg name="launch_tools" value="false" />
-  </include>  
- 
-  <include file="$(find multicopter_mpc_controller)/launch/rviz.launch" />
+  </include>
+
+  <include file="$(find multicopter_mpc_controller)/launch/rviz.launch">
+    <arg name="mav_name" value="$(arg mav_name)" />
+  </include>
+
 
   <!-- auxiliary nodes -->
   <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="$(arg mpc_type)_rqt_reconfigure" />

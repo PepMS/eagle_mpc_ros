@@ -49,7 +49,7 @@ class MpcController():
                                                        self.mpcController.platform_params, self.mpcController.dt,
                                                        solver.xs[0])
             time = 0
-            for i in range(0, self.nTraj):
+            for i in range(0, self.nTraj*2):
                 self.mpcController.problem.x0 = self.simulator.states[-1]
                 self.mpcController.updateProblem(time)
                 self.mpcController.solver.solve(self.mpcController.solver.xs, self.mpcController.solver.us,

@@ -1,29 +1,31 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="namespace_trajectory_generation" value="trajectory_generation"/>
-  <arg name="trajectory_config" default="quad_passthrough.yaml"/>
+  <arg name="mav_name" default="hexacopter370" />
+  <arg name="trajectory_name" default="hover" />
+  <arg name="trajectory_namespace" value="trajectory_generation" />
+  <arg name="trajectory_config" default="$(arg mav_name)_$(arg trajectory_name).yaml"/>
 
-  <arg name="namespace_controller" value="mpc_controller"/>
-  <arg name="mpc_config" default="mpc.yaml"/>
+  <arg name="namespace_controller" value="mpc_controller" />
+  <arg name="mpc_config" default="$(arg mav_name)_mpc.yaml" />
 
   <arg name="from_bag" default="false" />
   <arg name="bag_name" default="passthrough_euler_005.bag" />
-  
+
   <include file="$(find multicopter_mpc_viz)/launch/trajectory_generator_viz.launch">
-    <arg name="namespace" value="$(arg namespace_trajectory_generation)"/>
-    <arg name="trajectory" value="$(arg trajectory_config)"/>
-    <arg name="launch_tools" value="false"/>
+    <arg name="namespace" value="$(arg trajectory_namespace)" />
+    <arg name="trajectory_config" value="$(arg trajectory_config)" />
+    <arg name="launch_tools" value="false" />
   </include>
 
   <group ns="$(arg namespace_controller)">
     <param name="trajectory_path" value="$(find multicopter_mpc_yaml)/trajectories/$(arg trajectory_config)" />
     <param name="mpc_path" value="$(find multicopter_mpc_yaml)/mpc/$(arg mpc_config)" />
-    <param name="dynamic_reconfigure_client" value="$(arg namespace_trajectory_generation)/tg_node" />
-    <param name="bag_path" value="$(find multicopter_mpc_bag)/rosbags/$(arg bag_name)" if="$(arg from_bag)"/>
-    
-    <node pkg="multicopter_mpc_viz" name="mpc_controller_node" type="mpc_controller_viz.py" output="screen"/>
-    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find multicopter_mpc_viz)/rviz/mpc_controller_display.rviz"/>
-    <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure"/>
+    <param name="dynamic_reconfigure_client" value="$(arg trajectory_namespace)/tg_node" />
+    <param name="bag_path" value="$(find multicopter_mpc_bag)/rosbags/$(arg bag_name)" if="$(arg from_bag)" />
+
+    <node pkg="multicopter_mpc_viz" name="mpc_controller_node" type="mpc_controller_viz.py" output="screen" />
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find multicopter_mpc_viz)/rviz/mpc_controller_display.rviz" />
+    <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" />
   </group>
 
 </launch>
