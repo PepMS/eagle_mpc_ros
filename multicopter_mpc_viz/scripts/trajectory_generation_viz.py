@@ -20,7 +20,7 @@ class Trajectory():
         self.trajectory.autoSetup(trajectory_path)
 
     def compute(self):
-        self.problem = self.trajectory.createProblem(10, True, "IntegratedActionModelEuler")
+        self.problem = self.trajectory.createProblem(50, True, "IntegratedActionModelEuler")
         self.solver = multicopter_mpc.SolverSbFDDP(self.problem, self.trajectory.squash)
 
         self.solver.setCallbacks([crocoddyl.CallbackVerbose()])
