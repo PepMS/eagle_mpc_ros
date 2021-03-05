@@ -156,7 +156,8 @@ void MpcRunner::callbackOdometryMpc(const nav_msgs::OdometryConstPtr &msg_odomet
                                      carrot_mpc_->get_iters());
 
     // PROPERLY HANDLE SOLVER TYPE!
-    control_command_ = boost::static_pointer_cast<multicopter_mpc::SolverSbFDDP>(carrot_mpc_->get_solver())->getSquashControls()[0];
+    control_command_ =
+        boost::static_pointer_cast<multicopter_mpc::SolverSbFDDP>(carrot_mpc_->get_solver())->getSquashControls()[0];
 
     thrust_command_ = control_command_.head(thrust_command_.size());
     multicopter_mpc::Tools::thrustToSpeed(thrust_command_, carrot_mpc_->get_platform_params(), speed_command_);
@@ -166,10 +167,9 @@ void MpcRunner::callbackOdometryMpc(const nav_msgs::OdometryConstPtr &msg_odomet
     control_last_ = ros::Time::now();
 
     msg_thrusts_.header.stamp = ros::Time::now();
-    msg_thrusts_.angular_velocities[0] = speed_command_(0);
-    msg_thrusts_.angular_velocities[1] = speed_command_(1);
-    msg_thrusts_.angular_velocities[2] = speed_command_(2);
-    msg_thrusts_.angular_velocities[3] = speed_command_(3);
+    for (std::size_t i = 0; i < speed_command_.size(); ++i) {
+      msg_thrusts_.angular_velocities[i] = speed_command_(i);
+    }
     pub_motor_command_.publish(msg_thrusts_);
 
     if (node_params_.record_solver) {
