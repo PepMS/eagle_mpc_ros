@@ -42,7 +42,7 @@ class WholeBodyStateInterface():
         # Thrusts
         self._msg.thrusts = []
         pinocchio.forwardKinematics(self._model, self._data, q, v)
-        frame_id = self._model.getFrameId(self._model.name + "__base_link")
+        frame_id = self._model.getFrameId(self._platform_params.base_link_name)
         iMbl = pinocchio.updateFramePlacement(self._model, self._data, frame_id)
         for i in range(n_rotors):
             th = Thrust()
