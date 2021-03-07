@@ -20,6 +20,7 @@ import crocoddyl
 import multicopter_mpc
 from multicopter_mpc.utils import simulator
 
+
 class MpcController():
     def __init__(self, trajectoryPath, mpcPath, bagPath=None):
         dtTrajectory = 10
@@ -49,7 +50,7 @@ class MpcController():
                                                        self.mpcController.platform_params, self.mpcController.dt,
                                                        solver.xs[0])
             time = 0
-            for i in range(0, self.nTraj*2):
+            for i in range(0, self.nTraj * 2):
                 self.mpcController.problem.x0 = self.simulator.states[-1]
                 self.mpcController.updateProblem(time)
                 self.mpcController.solver.solve(self.mpcController.solver.xs, self.mpcController.solver.us,
@@ -152,11 +153,15 @@ class MpcControllerNode():
         self.br = tf.TransformBroadcaster()
 
     def callbackTrajectoryTimer(self, timer):
+        # print()
+        # print("here 1")
         self.trajectoryPub.publish(self.ts, self.qs, self.vs)
+        # print("here 2")
 
     def callbackStateTimer(self, timer):
         x = self.xs[self.idxTrj]
         nq = self.mpcController.mpcController.robot_model.nq
+        # print("here 2", self.idxTrj)
         nRotors = self.mpcController.mpcController.platform_params.n_rotors
         self.statePub.publish(0.123, x[:nq], x[nq:], self.us[self.idxTrj][:nRotors], self.us[self.idxTrj][nRotors:])
         qs, vs, ts = [], [], []

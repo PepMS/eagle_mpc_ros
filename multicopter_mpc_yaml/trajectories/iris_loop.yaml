@@ -11,31 +11,31 @@ trajectory:
       costs:
         - name: "state_reg"
           type: "CostModelState"
-          weight: 1e-5
+          weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
         - name: "control_reg"
           type: "CostModelControl"
-          weight: 5e-2
+          weight: 1e-1
           reference: [0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1]
 
     - name: "wp1"
-      duration: 10 #ms
+      duration: 0 #ms
       costs:
         - name: "state_reg"
           type: "CostModelState"
-          weight: 1e-5
+          weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
         - name: "control_reg"
           type: "CostModelControl"
-          weight: 5e-2
+          weight: 1e-1
           reference: [0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1]
@@ -55,43 +55,43 @@ trajectory:
           angular: [0, 0, 0]
 
     - name: "nav_wp2"
-      duration: 1400 #ms
+      duration: 1600 #ms
       transition: true
       costs:
         - name: "state_reg"
           type: "CostModelState"
-          weight: 1e-5
+          weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
         - name: "control_reg"
           type: "CostModelControl"
-          weight: 5e-2
+          weight: 1e-1
           reference: [0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1]
 
     - name: "wp2"
-      duration: 10 #ms
+      duration: 0 #ms
       costs:
         - name: "state_reg"
           type: "CostModelState"
-          weight: 1e-5
+          weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
         - name: "control_reg"
           type: "CostModelControl"
-          weight: 5e-2
+          weight: 1e-1
           reference: [0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1]
 
         - name: "placement_base_link"
           type: "CostModelFramePlacement"
-          weight: 1000
+          weight: 2000
           link_name: "iris__base_link"
           position: [0.0, 0, 6.0]
           orientation: [1, 0, 0, 0] # x,y,z,w
@@ -109,14 +109,14 @@ trajectory:
       costs:
         - name: "state_reg"
           type: "CostModelState"
-          weight: 1e-4
+          weight: 1e-2
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
         - name: "control_reg"
           type: "CostModelControl"
-          weight: 5e-2
+          weight: 1e-1
           reference: [0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1]
@@ -126,14 +126,14 @@ trajectory:
       costs:
         - name: "state_reg"
           type: "CostModelState"
-          weight: 1e-5
+          weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
         - name: "control_reg"
           type: "CostModelControl"
-          weight: 5e-2
+          weight: 1e-1
           reference: [0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1]
@@ -142,7 +142,7 @@ trajectory:
           type: "CostModelFramePlacement"
           weight: 2000
           link_name: "iris__base_link"
-          position: [0.0, -1.2, 2.0]
+          position: [0.0, -2.0, 2.0]
           orientation: [0, 0, 0, 1] # x,y,z,w
 
         - name: "motion_base_link"

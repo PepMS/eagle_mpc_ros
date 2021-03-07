@@ -1,19 +1,27 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="mav_name" default="hexacopter370" />
+  <arg name="arm_name" default="flying_arm_3" />
+  <arg name="arm_enable" default="false" />
+
   <arg name="trajectory_name" default="hover" />
   <arg name="trajectory_namespace" value="trajectory_generation" />
-  <arg name="trajectory_config" default="$(arg mav_name)_$(arg trajectory_name).yaml"/>
+  <arg name="trajectory_config" value="$(arg mav_name)_$(arg trajectory_name).yaml" unless="$(arg arm_enable)" />
+  <arg name="trajectory_config" value="$(arg mav_name)_$(arg arm_name)_$(arg trajectory_name).yaml" if="$(arg arm_enable)" />
 
   <arg name="namespace_controller" value="mpc_controller" />
-  <arg name="mpc_config" default="$(arg mav_name)_mpc.yaml" />
+  <arg name="mpc_config" value="$(arg mav_name)_mpc.yaml" unless="$(arg arm_enable)" />
+  <arg name="mpc_config" value="$(arg mav_name)_$(arg arm_name)_mpc.yaml" if="$(arg arm_enable)" />
 
   <arg name="from_bag" default="false" />
   <arg name="bag_name" default="passthrough_euler_005.bag" />
 
   <include file="$(find multicopter_mpc_viz)/launch/trajectory_generator_viz.launch">
     <arg name="namespace" value="$(arg trajectory_namespace)" />
-    <arg name="trajectory_config" value="$(arg trajectory_config)" />
+    <arg name="mav_name" value="$(arg mav_name)" />
+    <arg name="arm_name" value="$(arg arm_name)" />
+    <arg name="arm_enable" value="$(arg arm_enable)" />
+    <arg name="trajectory_name" value="$(arg trajectory_name)" />
     <arg name="launch_tools" value="false" />
   </include>
 

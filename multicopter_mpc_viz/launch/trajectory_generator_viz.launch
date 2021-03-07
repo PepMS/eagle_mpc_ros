@@ -2,11 +2,14 @@
 <launch>
   <arg name="namespace" default="trajectory_generation" />
 
-  <!-- <arg name="trajectory" default="am_eagle_catch.yaml" /> -->
   <arg name="mav_name" default="hexacopter370"/>
+  <arg name="arm_name" default="flying_arm_3" />
+  <arg name="arm_enable" default="false" />
   <arg name="trajectory_name" default="hover" />
-  <arg name="trajectory_config" default="$(arg mav_name)_$(arg trajectory_name).yaml" />
   <arg name="launch_tools" default="true" />
+
+  <arg name="trajectory_config" value="$(arg mav_name)_$(arg trajectory_name).yaml" unless="$(arg arm_enable)" />
+  <arg name="trajectory_config" value="$(arg mav_name)_$(arg arm_name)_$(arg trajectory_name).yaml" if="$(arg arm_enable)" />
 
   <group ns="$(arg namespace)">
     <param name="trajectory_path" value="$(find multicopter_mpc_yaml)/trajectories/$(arg trajectory_config)" />
