@@ -4,7 +4,7 @@ mpc_controller:
     urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/iris_description/robots/iris.urdf"
     follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/iris.yaml"
   integration_method: "IntegratedActionModelEuler"
-  knots: 40
+  knots: 60
   solver: "SolverSbFDDP"
   iters: 2
   dt: 20

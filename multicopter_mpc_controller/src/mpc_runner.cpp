@@ -69,6 +69,10 @@ void MpcRunner::initializeMpcController() {
 
   carrot_mpc_ = boost::make_shared<multicopter_mpc::CarrotMpc>(
       trajectory_, solver->get_xs(), node_params_.trajectory_dt, node_params_.mpc_config_path);
+
+  if (carrot_mpc_->get_solver_type() == multicopter_mpc::SolverTypes::SolverSbFDDP) {
+    boost::dynamic_pointer_cast<multicopter_mpc::SolverSbFDDP>(carrot_mpc_->get_solver())->set_convergence_init(1e-3);
+  }
 }
 
 void MpcRunner::initializeVariables() {

@@ -4,8 +4,8 @@ mpc_controller:
     urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/hexacopter370_description/urdf/hexacopter370_flying_arm_3.urdf"
     follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/hexacopter370.yaml"
   integration_method: "IntegratedActionModelEuler"
-  knots: 40
+  knots: 30
   solver: "SolverSbFDDP"
-  iters: 10
-  dt: 20
+  iters: 2
+  dt: 30
   carrot_weight: 1000
