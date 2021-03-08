@@ -37,6 +37,8 @@ void MpcRunner::initializeParameters() {
   nh_.param<std::string>(ros::this_node::getNamespace() + "/mpc_config", node_params_.mpc_config_path, "");
   nh_.param<bool>(ros::this_node::getNamespace() + "/use_internal_gains", node_params_.use_internal_gains, false);
   nh_.param<bool>(ros::this_node::getNamespace() + "/record_solver", node_params_.record_solver, false);
+  nh_.param<std::string>(ros::this_node::getNamespace() + "/arm_name", node_params_.arm_name, "");
+  node_params_.arm_enable = node_params_.arm_name != "";
 
   int motor_command_dt;
   nh_.param<int>(ros::this_node::getNamespace() + "/motor_command_dt", motor_command_dt, 0);
@@ -47,7 +49,7 @@ void MpcRunner::initializeMpcController() {
   trajectory_ = multicopter_mpc::Trajectory::create();
   trajectory_->autoSetup(node_params_.trajectory_config_path);
 
-  ROS_WARN("This is the dt: %ld", node_params_.trajectory_dt);
+  ROS_WARN("This is the trajectory dt: %ld", node_params_.trajectory_dt);
   boost::shared_ptr<crocoddyl::ShootingProblem> problem = trajectory_->createProblem(
       node_params_.trajectory_dt, node_params_.trajectory_squash, node_params_.trajectory_integration);
 
@@ -112,13 +114,26 @@ void MpcRunner::initializeSubscribers() {
     subs_odom_ =
         nh_.subscribe("/odometry", 1, &MpcRunner::callbackOdometryMpc, this, ros::TransportHints().tcpNoDelay());
   }
+
+  if (node_params_.arm_enable) {
+    subs_joint_state_ =
+        nh_.subscribe("/joint_states", 1, &MpcRunner::callbackJointState, this, ros::TransportHints().tcpNoDelay());
+  }
 }
 
 void MpcRunner::initializePublishers() {
-  pub_motor_command_ = nh_.advertise<mav_msgs::Actuators>("/motor_command", 1);
+  pub_thrust_command_ = nh_.advertise<mav_msgs::Actuators>("/motor_command", 1);
   if (node_params_.record_solver) {
-    pub_solver_performance_ = nh_.advertise<multicopter_mpc_msgs::SolverPerformance>("solver_performance", 1);
-    pub_whole_body_state_ = nh_.advertise<multicopter_mpc_msgs::WholeBodyState>("whole_body_state", 1);
+    pub_solver_performance_ = nh_.advertise<multicopter_mpc_msgs::SolverPerformance>("/solver_performance", 1);
+    pub_whole_body_state_ = nh_.advertise<multicopter_mpc_msgs::WholeBodyState>("/whole_body_state", 1);
+  }
+
+  if (node_params_.arm_enable) {
+    std::size_t n_joints = carrot_mpc_->get_robot_model()->nq - 7;
+    pub_arm_commands_.reserve(n_joints);
+    for (std::size_t i = 0; i < n_joints; ++i) {
+      pub_arm_commands_.push_back(nh_.advertise<std_msgs::Float64>("/joint_command_" + std::to_string(i + 1), 1));
+    }
   }
 }
 
@@ -131,12 +146,12 @@ void MpcRunner::callbackOdometryMpc(const nav_msgs::OdometryConstPtr &msg_odomet
   state_(4) = msg_odometry->pose.pose.orientation.y;
   state_(5) = msg_odometry->pose.pose.orientation.z;
   state_(6) = msg_odometry->pose.pose.orientation.w;
-  state_(7) = msg_odometry->twist.twist.linear.x;
-  state_(8) = msg_odometry->twist.twist.linear.y;
-  state_(9) = msg_odometry->twist.twist.linear.z;
-  state_(10) = msg_odometry->twist.twist.angular.x;
-  state_(11) = msg_odometry->twist.twist.angular.y;
-  state_(12) = msg_odometry->twist.twist.angular.z;
+  state_(carrot_mpc_->get_robot_model()->nq) = msg_odometry->twist.twist.linear.x;
+  state_(carrot_mpc_->get_robot_model()->nq + 1) = msg_odometry->twist.twist.linear.y;
+  state_(carrot_mpc_->get_robot_model()->nq + 2) = msg_odometry->twist.twist.linear.z;
+  state_(carrot_mpc_->get_robot_model()->nq + 3) = msg_odometry->twist.twist.angular.x;
+  state_(carrot_mpc_->get_robot_model()->nq + 4) = msg_odometry->twist.twist.angular.y;
+  state_(carrot_mpc_->get_robot_model()->nq + 5) = msg_odometry->twist.twist.angular.z;
   state_time_ = msg_odometry->header.stamp;
   mut_state_.unlock();
 
@@ -170,7 +185,12 @@ void MpcRunner::callbackOdometryMpc(const nav_msgs::OdometryConstPtr &msg_odomet
     for (std::size_t i = 0; i < speed_command_.size(); ++i) {
       msg_thrusts_.angular_velocities[i] = speed_command_(i);
     }
-    pub_motor_command_.publish(msg_thrusts_);
+    pub_thrust_command_.publish(msg_thrusts_);
+
+    for (std::size_t i = 0; i < carrot_mpc_->get_robot_model()->nq - 7; ++i) {
+      msg_joint_command_.data = control_command_(speed_command_.size() + i);
+      pub_arm_commands_[i].publish(msg_joint_command_);
+    }
 
     if (node_params_.record_solver) {
       solver_duration_ = ros::WallTime::now() - solver_time_init_;
@@ -242,6 +262,17 @@ void MpcRunner::callbackOdometryGains(const nav_msgs::OdometryConstPtr &msg_odom
   //   msg_actuators_.angular_velocities[3] = motors_speed_(3);
   //   pub_motor_command_.publish(msg_actuators_);
   // }
+}
+
+void MpcRunner::callbackJointState(const sensor_msgs::JointStateConstPtr &msg_joint_state) {
+  if (msg_joint_state->name[0].compare(0, node_params_.arm_name.size(), node_params_.arm_name) == 0) {
+    mut_state_.lock();
+    for (std::size_t i = 0; i < msg_joint_state->position.size(); ++i) {
+      state_(7 + i) = msg_joint_state->position[i];
+      state_(carrot_mpc_->get_robot_model()->nq + 6 + i) = msg_joint_state->velocity[i];
+    }
+    mut_state_.unlock();
+  }
 }
 
 void MpcRunner::callbackMpcSolve(const ros::TimerEvent &) {

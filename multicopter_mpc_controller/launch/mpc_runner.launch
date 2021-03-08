@@ -53,16 +53,17 @@
     <param name="use_internal_gains" value="$(arg use_internal_gains)" />
     <param name="record_solver" value="$(arg record_solver)" />
     <param name="motor_command_dt" value="$(arg motor_command_dt)" if="$(arg use_internal_gains)" />
+    <param name="arm_name" value="$(arg arm_name)" if="$(arg arm_enable)" />
 
     <node name="$(arg mpc_type)" pkg="multicopter_mpc_controller" type="mpc_runner_node" output="screen">
       <remap from="/odometry" to="/$(arg mav_name)/ground_truth/odometry" if="$(arg groundtruth)" />
       <remap from="/odometry" to="/$(arg mav_name)/odometry_sensor1/odometry" unless="$(arg groundtruth)" />
       <remap from="/motor_command" to="/$(arg mav_name)/command/motor_speed" />
-      <!-- <remap from="/joint1_command" to="/$(arg mav_name)/joint1_effort_controller/commmad" if="$(arg arm_enable)"/>
-      <remap from="/joint2_command" to="/$(arg mav_name)/joint1_effort_controller/commmad" if="$(arg arm_enable)"/>
-      <remap from="/joint3_command" to="/$(arg mav_name)/joint1_effort_controller/commmad" if="$(arg arm_enable)"/> -->
+      <remap from="/joint_states" to="/$(arg mav_name)/joint_states" />
+      <remap from="/joint_command_1" to="/$(arg mav_name)/joint1_effort_controller/command" if="$(arg arm_enable)"/>
+      <remap from="/joint_command_2" to="/$(arg mav_name)/joint2_effort_controller/command" if="$(arg arm_enable)"/>
+      <remap from="/joint_command_3" to="/$(arg mav_name)/joint3_effort_controller/command" if="$(arg arm_enable)"/>
     </node>
-
   </group>
 
   <!-- Visualizer -->

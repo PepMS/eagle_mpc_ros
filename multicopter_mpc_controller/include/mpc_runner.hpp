@@ -10,6 +10,8 @@
 #include "nav_msgs/Odometry.h"
 #include "mav_msgs/Actuators.h"
 #include "nav_msgs/Path.h"
+#include "sensor_msgs/JointState.h"
+#include "std_msgs/Float64.h"
 #include "visualization_msgs/Marker.h"
 #include "multicopter_mpc_msgs/WholeBodyState.h"
 #include "multicopter_mpc_msgs/MotorsState.h"
@@ -39,18 +41,21 @@ class MpcRunner {
 
   void callbackOdometryMpc(const nav_msgs::OdometryConstPtr &msg_odometry);
   void callbackOdometryGains(const nav_msgs::OdometryConstPtr &msg_odometry);
-  void callbackMpcSolve(const ros::TimerEvent &);
+  void callbackJointState(const sensor_msgs::JointStateConstPtr &msg_joint_state);
   void callbackConfig(multicopter_mpc_controller::ParamsConfig &config, uint32_t level);
+  void callbackMpcSolve(const ros::TimerEvent &);
 
   // ROS objects & methods
   ros::NodeHandle nh_;
 
   ros::Subscriber subs_odom_;
+  ros::Subscriber subs_joint_state_;
 
-  ros::Publisher pub_motor_command_;
+  ros::Publisher pub_thrust_command_;
   ros::Publisher pub_whole_body_state_;
   ros::Publisher pub_solver_performance_;
-
+  std::vector<ros::Publisher> pub_arm_commands_;
+  ros::Publisher pub_arm_command_;
   ros::Timer timer_mpc_solve_;
 
   dynamic_reconfigure::Server<multicopter_mpc_controller::ParamsConfig> server_;
@@ -61,6 +66,7 @@ class MpcRunner {
   multicopter_mpc_msgs::WholeBodyState msg_whole_body_state_;
   multicopter_mpc_msgs::SolverPerformance msg_solver_performance_;
   multicopter_mpc_msgs::MotorsState msg_motors_state_;
+  std_msgs::Float64 msg_joint_command_;
   std::mutex mut_motors_state_;
 
   // Mpc Related
@@ -74,6 +80,9 @@ class MpcRunner {
     multicopter_mpc::SolverTypes trajectory_solver;
     std::string trajectory_integration;
     bool trajectory_squash;
+
+    bool arm_enable;
+    std::string arm_name;
 
     std::string mpc_config_path;
     std::string mpc_type;
@@ -117,7 +126,6 @@ class MpcRunner {
   ros::Time controller_start_time_;
   ros::Duration controller_time_;
   std::size_t controller_instant_;
-
 };
 
 // #endif
