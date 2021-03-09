@@ -1,7 +1,0 @@
-mpc_controller:
-  type: "CarrotMpc"
-  yaml_path: "/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/controller_carrot/carrot-mpc.yaml"
-  solver: "sbFDDP"
-  integrator: "Euler"
-  running_iters: 2
-  callback: false

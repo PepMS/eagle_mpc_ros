@@ -234,15 +234,20 @@ void WholeBodyStateDisplay::processWholeBodyState() {
   // Display the robot
   if (robot_enable_) {
     Eigen::VectorXd q = Eigen::VectorXd::Zero(model_.nq);
+    q(0) = msg_->floating_base.pose.position.x;
+    q(1) = msg_->floating_base.pose.position.y;
+    q(2) = msg_->floating_base.pose.position.z;
     q(3) = msg_->floating_base.pose.orientation.x;
     q(4) = msg_->floating_base.pose.orientation.y;
     q(5) = msg_->floating_base.pose.orientation.z;
     q(6) = msg_->floating_base.pose.orientation.w;
 
-    pinocchio::centerOfMass(model_, data_, q);
-    q(0) = msg_->floating_base.pose.position.x - data_.com[0](0);
-    q(1) = msg_->floating_base.pose.position.y - data_.com[0](1);
-    q(2) = msg_->floating_base.pose.position.z - data_.com[0](2);
+    std::size_t n_joints = msg_->joints.size();
+    for (std::size_t j = 0; j < n_joints; ++j) {
+      pinocchio::JointIndex jointId =
+          model_.getJointId(msg_->joints[j].name) - 2;
+      q(jointId + 7) = msg_->joints[j].position;
+    }    
     robot_->update(PinocchioLinkUpdater(model_, data_, q, boost::bind(linkUpdaterStatusFunction, _1, _2, _3, this)));
 
     if (thrusts_enable_) {

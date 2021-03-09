@@ -1,40 +1,36 @@
-from multicopter_mpc_msgs.msg import WholeBodyState, Thrust
+from multicopter_mpc_msgs.msg import WholeBodyState, Thrust, JointState
 import pinocchio
 import numpy as np
 import copy
 
 
 class WholeBodyStateInterface():
-    def __init__(self, model, mc_params, frame_id="world"):
+    def __init__(self, model, platform_params, frame_id="world"):
         print()
         self._model = model
         self._data = self._model.createData()
-        self._mc_params = mc_params
+        self._platform_params = platform_params
         self.frame_id = frame_id
         self._msg = WholeBodyState()
         self._msg.header.frame_id = frame_id
 
-    def writeToMessage(self, t, q, v=None, thrusts=None, rotor_names=None):
+    def writeToMessage(self, t, q, v=None, thrusts=None, tau=None, rotor_names=None):
         # self._msg.header.stamp = rospy.Time(t)
         self._msg.time = t
 
         if v is None:
             v = np.zeros(self._model.nv)
         if thrusts is None:
-            thrusts = np.zeros(self._mc_params.n_rotors)
+            thrusts = np.zeros(self._platform_params.n_rotors)
 
         n_rotors = np.size(thrusts)
 
-        pinocchio.centerOfMass(self._model, self._data, q, v)
-        c = self._data.com[0]
-        cd = self._data.vcom[0]
-        # Center of mass
-        self._msg.floating_base.pose.position.x = c[0]
-        self._msg.floating_base.pose.position.y = c[1]
-        self._msg.floating_base.pose.position.z = c[2]
-        self._msg.floating_base.motion.linear.x = cd[0]
-        self._msg.floating_base.motion.linear.y = cd[1]
-        self._msg.floating_base.motion.linear.z = cd[2]
+        self._msg.floating_base.pose.position.x = q[0]
+        self._msg.floating_base.pose.position.y = q[1]
+        self._msg.floating_base.pose.position.z = q[2]
+        self._msg.floating_base.motion.linear.x = v[0]
+        self._msg.floating_base.motion.linear.y = v[1]
+        self._msg.floating_base.motion.linear.z = v[2]
         # Base
         self._msg.floating_base.pose.orientation.x = q[3]
         self._msg.floating_base.pose.orientation.y = q[4]
@@ -44,24 +40,35 @@ class WholeBodyStateInterface():
         self._msg.floating_base.motion.angular.y = v[4]
         self._msg.floating_base.motion.angular.z = v[5]
         # Thrusts
-        if rotor_names is not None:
-            self._msg.thrusts = []
-            pinocchio.forwardKinematics(self._model, self._data, q, v)
-            for i in range(n_rotors):
-                frame_id = self._model.getFrameId(rotor_names[i])
-                oMf = pinocchio.updateFramePlacement(self._model, self._data, frame_id)
-                pose = pinocchio.SE3ToXYZQUAT(oMf)
-                th = Thrust()
-                th.pose.position.x = pose[0]
-                th.pose.position.y = pose[1]
-                th.pose.position.z = pose[2]
-                th.pose.orientation.x = pose[3]
-                th.pose.orientation.y = pose[4]
-                th.pose.orientation.z = pose[5]
-                th.pose.orientation.w = pose[6]
-                th.thrust_command = thrusts[i]
-                th.thrust_min = self._mc_params.min_thrust
-                th.thrust_max = self._mc_params.max_thrust
-                self._msg.thrusts.append(th)
+        self._msg.thrusts = []
+        pinocchio.forwardKinematics(self._model, self._data, q, v)
+        frame_id = self._model.getFrameId(self._platform_params.base_link_name)
+        iMbl = pinocchio.updateFramePlacement(self._model, self._data, frame_id)
+        for i in range(n_rotors):
+            th = Thrust()
+            iMrot = iMbl * self._platform_params.rotors_pose[i]
+            pose = pinocchio.SE3ToXYZQUAT(iMrot)
+            th.pose.position.x = pose[0]
+            th.pose.position.y = pose[1]
+            th.pose.position.z = pose[2]
+            th.pose.orientation.x = pose[3]
+            th.pose.orientation.y = pose[4]
+            th.pose.orientation.z = pose[5]
+            th.pose.orientation.w = pose[6]
+            th.thrust_command = thrusts[i]
+            th.thrust_min = self._platform_params.min_thrust
+            th.thrust_max = self._platform_params.max_thrust
+            self._msg.thrusts.append(th)
+
+        self._msg.joints = []
+        if tau is not None:
+            njoints = self._model.njoints - 2
+            for j in range(njoints):
+                joint = JointState()
+                joint.name = self._model.names[j + 2]
+                joint.position = q[7 + j]
+                joint.velocity = v[6 + j]
+                joint.effort = tau[j]
+                self._msg.joints.append(joint)
 
         return copy.deepcopy(self._msg)

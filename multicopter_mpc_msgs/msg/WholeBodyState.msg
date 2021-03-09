@@ -23,6 +23,9 @@ float64 time
 
 # This represents the base state (CoM motion, angular motion and centroidal momenta)
 multicopter_mpc_msgs/FloatingBaseState floating_base
+
+multicopter_mpc_msgs/JointState[] joints
+
 multicopter_mpc_msgs/Thrust[] thrusts
 
 # This represents the joint state of the arm (position, velocity, acceleration and effort)

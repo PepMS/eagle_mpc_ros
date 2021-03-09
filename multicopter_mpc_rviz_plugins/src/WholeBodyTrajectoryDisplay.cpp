@@ -33,11 +33,11 @@ WholeBodyTrajectoryDisplay::WholeBodyTrajectoryDisplay()
       target_enable_(true),
       com_enable_(true),
       com_axes_enable_(true),
-      wp_enable_(true) {
+      placement_enable_(true) {
   // Category Groups
   target_category_ = new rviz::Property("Robot", QVariant(), "", this);
   com_category_ = new rviz::Property("Center of Mass", QVariant(), "", this);
-  wp_category_ = new rviz::Property("Waypoints", QVariant(), "", this);
+  placement_category_ = new rviz::Property("Placements", QVariant(), "", this);
 
   // Robot properties
   target_enable_property_ = new BoolProperty("Enable", true, "Enable/disable the Target display", target_category_,
@@ -80,13 +80,13 @@ WholeBodyTrajectoryDisplay::WholeBodyTrajectoryDisplay()
   com_alpha_property_->setMin(0);
   com_alpha_property_->setMax(1);
 
-  // Waypoints
-  wp_enable_property_ =
-      new BoolProperty("Enable", true, "Enable/disable the WP display", wp_category_, SLOT(updateWPEnable()), this);
-  wp_alpha_property_ = new FloatProperty("Alpha", 1.0, "Amount of transparency to apply to the waypoints.",
-                                         wp_category_, SLOT(updateWPProperties()), this);
-  wp_alpha_property_->setMin(0.0);
-  wp_alpha_property_->setMax(1.0);
+  // Placement costs
+  placement_enable_property_ = new BoolProperty("Enable", true, "Enable/disable the WP display", placement_category_,
+                                                SLOT(updatePlacementEnable()), this);
+  placement_alpha_property_ = new FloatProperty("Alpha", 1.0, "Amount of transparency to apply to the waypoints.",
+                                                placement_category_, SLOT(updatePlacementProperties()), this);
+  placement_alpha_property_->setMin(0.0);
+  placement_alpha_property_->setMax(1.0);
 }
 
 WholeBodyTrajectoryDisplay::~WholeBodyTrajectoryDisplay() {
@@ -102,7 +102,7 @@ void WholeBodyTrajectoryDisplay::onInitialize() {
   updateRobotAlpha();
   updateCoMStyle();
   // updateCoMLineProperties();
-  updateWPProperties();
+  updatePlacementProperties();
 }
 
 void WholeBodyTrajectoryDisplay::onEnable() {
@@ -110,7 +110,7 @@ void WholeBodyTrajectoryDisplay::onEnable() {
   loadRobotModel();
   updateTargetEnable();
   updateCoMEnable();
-  updateWPEnable();
+  updatePlacementEnable();
 }
 
 void WholeBodyTrajectoryDisplay::onDisable() {
@@ -311,28 +311,28 @@ void WholeBodyTrajectoryDisplay::updateCoMLineProperties() {
   context_->queueRender();
 }
 
-void WholeBodyTrajectoryDisplay::updateWPEnable() {
-  wp_enable_ = wp_enable_property_->getBool();
-  if (!wp_enable_) {
-    wp_axes_.clear();
+void WholeBodyTrajectoryDisplay::updatePlacementEnable() {
+  placement_enable_ = placement_enable_property_->getBool();
+  if (!placement_enable_) {
+    placement_axes_.clear();
   }
   context_->queueRender();
 }
 
-void WholeBodyTrajectoryDisplay::updateWPProperties() {
-  double alpha = wp_alpha_property_->getFloat();
-  std::size_t num_wp = wp_axes_.size();
+void WholeBodyTrajectoryDisplay::updatePlacementProperties() {
+  double alpha = placement_alpha_property_->getFloat();
+  std::size_t num_wp = placement_axes_.size();
   for (std::size_t i = 0; i < num_wp; i++) {
-    Ogre::ColourValue x_color = wp_axes_[i]->getDefaultXColor();
-    Ogre::ColourValue y_color = wp_axes_[i]->getDefaultYColor();
-    Ogre::ColourValue z_color = wp_axes_[i]->getDefaultZColor();
+    Ogre::ColourValue x_color = placement_axes_[i]->getDefaultXColor();
+    Ogre::ColourValue y_color = placement_axes_[i]->getDefaultYColor();
+    Ogre::ColourValue z_color = placement_axes_[i]->getDefaultZColor();
     x_color.a = alpha;
     y_color.a = alpha;
     z_color.a = alpha;
-    wp_axes_[i]->setXColor(x_color);
-    wp_axes_[i]->setYColor(y_color);
-    wp_axes_[i]->setZColor(z_color);
-    wp_axes_[i]->getSceneNode()->setVisible(true);
+    placement_axes_[i]->setXColor(x_color);
+    placement_axes_[i]->setYColor(y_color);
+    placement_axes_[i]->setZColor(z_color);
+    placement_axes_[i]->getSceneNode()->setVisible(true);
     // wp_axes_[i]->setScale(Ogre::Vector3(scale, scale, scale));
   }
 }
@@ -342,7 +342,7 @@ void WholeBodyTrajectoryDisplay::processMessage(const multicopter_mpc_msgs::Whol
   is_info_ = true;
   processTargetPosture();
   processCoMTrajectory();
-  processMission();
+  processTrajectory();
 }
 
 void WholeBodyTrajectoryDisplay::processTargetPosture() {
@@ -362,17 +362,20 @@ void WholeBodyTrajectoryDisplay::processTargetPosture() {
     }
 
     // Display the robot
-    const multicopter_mpc_msgs::WholeBodyState &state = msg_->trajectory.back();
+    const multicopter_mpc_msgs::WholeBodyState &state = msg_->robot_state_trajectory.back();
     Eigen::VectorXd q = Eigen::VectorXd::Zero(model_.nq);
+    q(0) = state.floating_base.pose.position.x;
+    q(1) = state.floating_base.pose.position.y;
+    q(2) = state.floating_base.pose.position.z;
     q(3) = state.floating_base.pose.orientation.x;
     q(4) = state.floating_base.pose.orientation.y;
     q(5) = state.floating_base.pose.orientation.z;
     q(6) = state.floating_base.pose.orientation.w;
-
-    pinocchio::centerOfMass(model_, data_, q); // This should be changed for the floating base link
-    q(0) = state.floating_base.pose.position.x - data_.com[0](0);
-    q(1) = state.floating_base.pose.position.y - data_.com[0](1);
-    q(2) = state.floating_base.pose.position.z - data_.com[0](2);
+    std::size_t n_joints = state.joints.size();
+    for (std::size_t j = 0; j < n_joints; ++j) {
+      pinocchio::JointIndex jointId = model_.getJointId(state.joints[j].name) - 2;
+      q(jointId + 7) = state.joints[j].position;
+    }
     robot_->update(PinocchioLinkUpdater(model_, data_, q, boost::bind(linkUpdaterStatusFunction, _1, _2, _3, this)));
   }
 }
@@ -398,10 +401,10 @@ void WholeBodyTrajectoryDisplay::processCoMTrajectory() {
     base_color.a = com_alpha_property_->getFloat();
 
     // Visualization of the base trajectory
-    std::size_t n_points = msg_->trajectory.size();
+    std::size_t n_points = msg_->robot_state_trajectory.size();
     com_axes_.clear();
     for (std::size_t i = 0; i < n_points; ++i) {
-      const multicopter_mpc_msgs::WholeBodyState &state = msg_->trajectory[i];
+      const multicopter_mpc_msgs::WholeBodyState &state = msg_->robot_state_trajectory[i];
       // Obtaining the CoM position and the base orientation
       Ogre::Vector3 com_position;
       Ogre::Quaternion base_orientation;
@@ -480,38 +483,38 @@ void WholeBodyTrajectoryDisplay::processCoMTrajectory() {
   }
 }
 
-void WholeBodyTrajectoryDisplay::processMission() {
-  if (wp_enable_) {
-    std::size_t wp_num = msg_->mission.waypoints.size();
-    wp_axes_.clear();
+void WholeBodyTrajectoryDisplay::processTrajectory() {
+  if (placement_enable_) {
+    std::size_t wp_num = msg_->trajectory.placements.size();
+    placement_axes_.clear();
     for (std::size_t i = 0; i < wp_num; ++i) {
       boost::shared_ptr<rviz::Axes> axes;
       axes.reset(new Axes(scene_manager_, scene_node_, 0.5, 0.02));
 
       Ogre::Vector3 position;
-      position.x = msg_->mission.waypoints[i].pose.position.x;
-      position.y = msg_->mission.waypoints[i].pose.position.y;
-      position.z = msg_->mission.waypoints[i].pose.position.z;
+      position.x = msg_->trajectory.placements[i].pose.position.x;
+      position.y = msg_->trajectory.placements[i].pose.position.y;
+      position.z = msg_->trajectory.placements[i].pose.position.z;
       Ogre::Quaternion orientation;
-      orientation.x = msg_->mission.waypoints[i].pose.orientation.x;
-      orientation.y = msg_->mission.waypoints[i].pose.orientation.y;
-      orientation.z = msg_->mission.waypoints[i].pose.orientation.z;
-      orientation.w = msg_->mission.waypoints[i].pose.orientation.w;
+      orientation.x = msg_->trajectory.placements[i].pose.orientation.x;
+      orientation.y = msg_->trajectory.placements[i].pose.orientation.y;
+      orientation.z = msg_->trajectory.placements[i].pose.orientation.z;
+      orientation.w = msg_->trajectory.placements[i].pose.orientation.w;
       axes->setPosition(position);
       axes->setOrientation(orientation);
 
       Ogre::ColourValue x_color = axes->getDefaultXColor();
       Ogre::ColourValue y_color = axes->getDefaultYColor();
       Ogre::ColourValue z_color = axes->getDefaultZColor();
-      x_color.a = wp_alpha_property_->getFloat();
-      y_color.a = wp_alpha_property_->getFloat();
-      z_color.a = wp_alpha_property_->getFloat();
+      x_color.a = placement_alpha_property_->getFloat();
+      y_color.a = placement_alpha_property_->getFloat();
+      z_color.a = placement_alpha_property_->getFloat();
       axes->setXColor(x_color);
       axes->setYColor(y_color);
       axes->setZColor(z_color);
       axes->getSceneNode()->setVisible(true);
       // axes->setScale(Ogre::Vector3(scale, scale, scale));
-      wp_axes_.push_back(axes);
+      placement_axes_.push_back(axes);
     }
   }
 }

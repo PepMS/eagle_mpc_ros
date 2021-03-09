@@ -6,15 +6,17 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /TrajectoryGenerated1/Robot1
         - /TrajectoryGenerated1/Center of Mass1
         - /TrajectoryState1/Thrusts1
+        - /ControllerTrajectory1
+        - /ControllerTrajectory1/Robot1
         - /ControllerTrajectory1/Center of Mass1
-        - /ControllerTrajectory1/Waypoints1
+        - /ControllerState1
         - /ControllerState1/Robot1
         - /ControllerState1/Thrusts1
         - /HorizonTrajectory1/Robot1
         - /HorizonTrajectory1/Center of Mass1
-        - /HorizonTrajectory1/Waypoints1
       Splitter Ratio: 0.5
     Tree Height: 719
   - Class: rviz/Selection
@@ -76,36 +78,35 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        iris__/imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        iris__base_link:
+        base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_0:
+        rotor_0:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_1:
+        rotor_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_2:
+        rotor_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_3:
+        rotor_3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
       Name: TrajectoryGenerated
+      Placements:
+        Alpha: 1
+        Enable: true
       Queue Size: 10
       Robot:
         Enable: false
@@ -116,9 +117,6 @@ Visualization Manager:
       Topic: /trajectory_generation/whole_body_trajectory
       Unreliable: false
       Value: true
-      Waypoints:
-        Alpha: 1
-        Enable: true
     - Class: multicopter_mpc_rviz_plugins/WholeBodyState
       Enabled: false
       Links:
@@ -127,31 +125,27 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        iris__/imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        iris__base_link:
+        base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_0:
+        rotor_0:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_1:
+        rotor_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_2:
+        rotor_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_3:
+        rotor_3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -190,36 +184,35 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        iris__/imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        iris__base_link:
+        base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_0:
+        rotor_0:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_1:
+        rotor_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_2:
+        rotor_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_3:
+        rotor_3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
       Name: ControllerTrajectory
+      Placements:
+        Alpha: 1
+        Enable: true
       Queue Size: 10
       Robot:
         Enable: false
@@ -230,9 +223,6 @@ Visualization Manager:
       Topic: /mpc_controller/whole_body_trajectory
       Unreliable: false
       Value: true
-      Waypoints:
-        Alpha: 1
-        Enable: false
     - Class: multicopter_mpc_rviz_plugins/WholeBodyState
       Enabled: true
       Links:
@@ -241,31 +231,27 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        iris__/imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        iris__base_link:
+        base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_0:
+        rotor_0:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_1:
+        rotor_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_2:
+        rotor_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_3:
+        rotor_3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -304,36 +290,35 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        iris__/imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        iris__base_link:
+        base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_0:
+        rotor_0:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_1:
+        rotor_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_2:
+        rotor_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_3:
+        rotor_3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
       Name: HorizonTrajectory
+      Placements:
+        Alpha: 1
+        Enable: true
       Queue Size: 10
       Robot:
         Enable: true
@@ -344,9 +329,6 @@ Visualization Manager:
       Topic: /mpc_controller/whole_body_partial_trajectory
       Unreliable: false
       Value: true
-      Waypoints:
-        Alpha: 1
-        Enable: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
