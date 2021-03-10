@@ -9,16 +9,17 @@ from .whole_body_interface import WholeBodyStateInterface
 
 
 class WholeBodyTrajectoryPublisher():
-    def __init__(self, topic, trajectory, frame_id="world", queue_size=10):
+    def __init__(self, topic, robotModel, platformParams, trajectory=None, frame_id="world", queue_size=10):
         # Defining the subscriber
         self._pub = rospy.Publisher(topic, WholeBodyTrajectory, queue_size=queue_size)
-        self._wb_iface = WholeBodyStateInterface(trajectory.robot_model, trajectory.platform_params, frame_id)
+        self._wb_iface = WholeBodyStateInterface(robotModel, platformParams, frame_id)
         self._trajectory = trajectory
         self._placements = []
-        for stage in self._trajectory.stages:
-            for cost in stage.cost_types.todict():
-                if stage.cost_types.todict()[cost] == multicopter_mpc.CostModelTypes.CostModelFramePlacement:
-                    self._placements.append(stage.costs.costs[cost].cost.reference.placement)
+        if self._trajectory is not None:
+            for stage in self._trajectory.stages:
+                for cost in stage.cost_types.todict():
+                    if stage.cost_types.todict()[cost] == multicopter_mpc.CostModelTypes.CostModelFramePlacement:
+                        self._placements.append(stage.costs.costs[cost].cost.reference.placement)
 
         self.writeTrajectoryMessage()
 
