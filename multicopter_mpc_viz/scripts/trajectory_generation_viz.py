@@ -19,14 +19,26 @@ class Trajectory():
         self.trajectory = multicopter_mpc.Trajectory()
         self.trajectory.autoSetup(trajectory_path)
 
-    def compute(self):
-        self.problem = self.trajectory.createProblem(20, True, "IntegratedActionModelEuler")
-        self.solver = multicopter_mpc.SolverSbFDDP(self.problem, self.trajectory.squash)
+    def compute(self, solverType, dt):
+        squash = False
+        if solverType == 'SolverSbFDDP':
+            squash = True
+
+        self.problem = self.trajectory.createProblem(dt, squash, "IntegratedActionModelEuler")
+
+        if solverType == 'SolverSbFDDP':
+            self.solver = multicopter_mpc.SolverSbFDDP(self.problem, self.trajectory.squash)
+        elif solverType == 'SolverBoxFDDP':
+            self.solver = crocoddyl.SolverBoxFDDP(self.problem)
 
         self.solver.setCallbacks([crocoddyl.CallbackVerbose()])
         self.solver.solve([], [], 100)
 
-        return self.solver.xs, self.solver.us_squash
+        if squash:
+            us = self.solver.us_squash
+        else:
+            us = self.solver.us
+        return self.solver.xs, us
 
 
 class TrajectoryNode():
@@ -42,13 +54,16 @@ class TrajectoryNode():
             rospack.get_path('multicopter_mpc_yaml') + '/trajectories/quad_hover.yaml')
         self.trajectory = Trajectory(self.trajectory_path)
 
+        self.dt = rospy.get_param(rospy.get_namespace() + "/trajectory_dt", 10)
+        self.solverType = rospy.get_param(rospy.get_namespace() + "/trajectory_solver", "SolverSbFDDP")
+
         namespace = rospy.get_namespace()
         with open(self.trajectory.trajectory.robot_model_path, "r") as urdf_file:
             urdf_string = urdf_file.read()
 
         rospy.set_param(namespace + "robot_description", urdf_string)
 
-        self.xs, self.us = self.trajectory.compute()
+        self.xs, self.us = self.trajectory.compute(self.solverType, self.dt)
         self.us.append(self.us[-1])
 
         self.continuous_player = False
@@ -69,6 +84,8 @@ class TrajectoryNode():
                                                        self.trajectory.trajectory.platform_params,
                                                        frame_id="world")
         self.trajectory_publisher = WholeBodyTrajectoryPublisher('whole_body_trajectory',
+                                                                 self.trajectory.trajectory.robot_model,
+                                                                 self.trajectory.trajectory.platform_params,
                                                                  self.trajectory.trajectory,
                                                                  frame_id="world")
 
