@@ -24,6 +24,7 @@
 
 #include "multicopter_mpc/trajectory.hpp"
 #include "multicopter_mpc/mpc-controllers/carrot-mpc.hpp"
+#include "multicopter_mpc/mpc-controllers/rail-mpc.hpp"
 #include "multicopter_mpc/mpc-base.hpp"
 
 class MpcRunner {
@@ -71,7 +72,7 @@ class MpcRunner {
 
   // Mpc Related
   boost::shared_ptr<multicopter_mpc::Trajectory> trajectory_;
-  boost::shared_ptr<multicopter_mpc::CarrotMpc> carrot_mpc_;
+  boost::shared_ptr<multicopter_mpc::MpcAbstract> mpc_controller_;
 
   // Variables & Parameters
   struct NodeParams {

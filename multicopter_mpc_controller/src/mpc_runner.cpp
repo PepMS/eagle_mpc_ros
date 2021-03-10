@@ -35,6 +35,7 @@ void MpcRunner::initializeParameters() {
   node_params_.trajectory_squash = node_params_.trajectory_solver == multicopter_mpc::SolverTypes::SolverSbFDDP;
 
   nh_.param<std::string>(ros::this_node::getNamespace() + "/mpc_config", node_params_.mpc_config_path, "");
+  nh_.param<std::string>(ros::this_node::getNamespace() + "/mpc_type", node_params_.mpc_type, "");
   nh_.param<bool>(ros::this_node::getNamespace() + "/use_internal_gains", node_params_.use_internal_gains, false);
   nh_.param<bool>(ros::this_node::getNamespace() + "/record_solver", node_params_.record_solver, false);
   nh_.param<std::string>(ros::this_node::getNamespace() + "/arm_name", node_params_.arm_name, "");
@@ -67,11 +68,20 @@ void MpcRunner::initializeMpcController() {
   solver->setCallbacks(callbacks);
   solver->solve(crocoddyl::DEFAULT_VECTOR, crocoddyl::DEFAULT_VECTOR);
 
-  carrot_mpc_ = boost::make_shared<multicopter_mpc::CarrotMpc>(
-      trajectory_, solver->get_xs(), node_params_.trajectory_dt, node_params_.mpc_config_path);
+  switch (multicopter_mpc::MpcTypes_map.at(node_params_.mpc_type)) {
+    case multicopter_mpc::MpcTypes::Carrot:
+      mpc_controller_ = boost::make_shared<multicopter_mpc::CarrotMpc>(
+          trajectory_, solver->get_xs(), node_params_.trajectory_dt, node_params_.mpc_config_path);
+      break;
+    case multicopter_mpc::MpcTypes::Rail:
+      mpc_controller_ = boost::make_shared<multicopter_mpc::RailMpc>(solver->get_xs(), node_params_.trajectory_dt,
+                                                                     node_params_.mpc_config_path);
+      break;
+  }
 
-  if (carrot_mpc_->get_solver_type() == multicopter_mpc::SolverTypes::SolverSbFDDP) {
-    boost::dynamic_pointer_cast<multicopter_mpc::SolverSbFDDP>(carrot_mpc_->get_solver())->set_convergence_init(1e-3);
+  if (mpc_controller_->get_solver_type() == multicopter_mpc::SolverTypes::SolverSbFDDP) {
+    boost::static_pointer_cast<multicopter_mpc::SolverSbFDDP>(mpc_controller_->get_solver())
+        ->set_convergence_init(1e-3);
   }
 }
 
@@ -79,17 +89,17 @@ void MpcRunner::initializeVariables() {
   if (node_params_.use_internal_gains) {
     motor_command_dt_ = node_params_.motor_command_dt / 1000.0;
   } else {
-    motor_command_dt_ = carrot_mpc_->get_dt() / 1000.0;
+    motor_command_dt_ = mpc_controller_->get_dt() / 1000.0;
   }
 
   // States
-  state_ = carrot_mpc_->get_robot_state()->zero();
+  state_ = mpc_controller_->get_robot_state()->zero();
   state_ref_ = state_;
-  state_diff_ = Eigen::VectorXd::Zero(carrot_mpc_->get_robot_state()->get_ndx());
+  state_diff_ = Eigen::VectorXd::Zero(mpc_controller_->get_robot_state()->get_ndx());
 
   // Thrust command
-  control_command_ = Eigen::VectorXd::Zero(carrot_mpc_->get_actuation()->get_nu());
-  thrust_command_ = Eigen::VectorXd::Zero(carrot_mpc_->get_platform_params()->n_rotors_);
+  control_command_ = Eigen::VectorXd::Zero(mpc_controller_->get_actuation()->get_nu());
+  thrust_command_ = Eigen::VectorXd::Zero(mpc_controller_->get_platform_params()->n_rotors_);
   speed_command_ = thrust_command_;
   if (control_command_.size() - thrust_command_.size() > 0) {
     torque_command_ = Eigen::VectorXd::Zero(control_command_.size() - thrust_command_.size());
@@ -97,7 +107,8 @@ void MpcRunner::initializeVariables() {
 
   // Gains
   flag_new_gains_ = false;
-  fb_gains_ = Eigen::MatrixXd::Zero(carrot_mpc_->get_actuation()->get_nu(), carrot_mpc_->get_robot_state()->get_ndx());
+  fb_gains_ =
+      Eigen::MatrixXd::Zero(mpc_controller_->get_actuation()->get_nu(), mpc_controller_->get_robot_state()->get_ndx());
 }
 
 void MpcRunner::initializeMsgs() {
@@ -112,7 +123,7 @@ void MpcRunner::initializeSubscribers() {
     subs_odom_ =
         nh_.subscribe("/odometry", 1, &MpcRunner::callbackOdometryGains, this, ros::TransportHints().tcpNoDelay());
     timer_mpc_solve_ =
-        nh_.createTimer(ros::Duration(carrot_mpc_->get_dt() / 1000.0), &MpcRunner::callbackMpcSolve, this);
+        nh_.createTimer(ros::Duration(mpc_controller_->get_dt() / 1000.0), &MpcRunner::callbackMpcSolve, this);
     ROS_INFO_STREAM("Publishing motor control every: " << motor_command_dt_ << " seconds");
   } else {
     subs_odom_ =
@@ -133,7 +144,7 @@ void MpcRunner::initializePublishers() {
   }
 
   if (node_params_.arm_enable) {
-    std::size_t n_joints = carrot_mpc_->get_robot_model()->nq - 7;
+    std::size_t n_joints = mpc_controller_->get_robot_model()->nq - 7;
     pub_arm_commands_.reserve(n_joints);
     for (std::size_t i = 0; i < n_joints; ++i) {
       pub_arm_commands_.push_back(nh_.advertise<std_msgs::Float64>("/joint_command_" + std::to_string(i + 1), 1));
@@ -150,37 +161,37 @@ void MpcRunner::callbackOdometryMpc(const nav_msgs::OdometryConstPtr &msg_odomet
   state_(4) = msg_odometry->pose.pose.orientation.y;
   state_(5) = msg_odometry->pose.pose.orientation.z;
   state_(6) = msg_odometry->pose.pose.orientation.w;
-  state_(carrot_mpc_->get_robot_model()->nq) = msg_odometry->twist.twist.linear.x;
-  state_(carrot_mpc_->get_robot_model()->nq + 1) = msg_odometry->twist.twist.linear.y;
-  state_(carrot_mpc_->get_robot_model()->nq + 2) = msg_odometry->twist.twist.linear.z;
-  state_(carrot_mpc_->get_robot_model()->nq + 3) = msg_odometry->twist.twist.angular.x;
-  state_(carrot_mpc_->get_robot_model()->nq + 4) = msg_odometry->twist.twist.angular.y;
-  state_(carrot_mpc_->get_robot_model()->nq + 5) = msg_odometry->twist.twist.angular.z;
+  state_(mpc_controller_->get_robot_model()->nq) = msg_odometry->twist.twist.linear.x;
+  state_(mpc_controller_->get_robot_model()->nq + 1) = msg_odometry->twist.twist.linear.y;
+  state_(mpc_controller_->get_robot_model()->nq + 2) = msg_odometry->twist.twist.linear.z;
+  state_(mpc_controller_->get_robot_model()->nq + 3) = msg_odometry->twist.twist.angular.x;
+  state_(mpc_controller_->get_robot_model()->nq + 4) = msg_odometry->twist.twist.angular.y;
+  state_(mpc_controller_->get_robot_model()->nq + 5) = msg_odometry->twist.twist.angular.z;
   state_time_ = msg_odometry->header.stamp;
   mut_state_.unlock();
 
   if (controller_started_) {
     mut_state_.lock();
-    carrot_mpc_->get_problem()->set_x0(state_);
+    mpc_controller_->get_problem()->set_x0(state_);
     mut_state_.unlock();
 
     controller_time_ = ros::Time::now() - controller_start_time_;
     controller_instant_ = (std::size_t)(controller_time_.toSec() * 1000.0);
-    carrot_mpc_->updateProblem(controller_instant_);
+    mpc_controller_->updateProblem(controller_instant_);
 
     if (node_params_.record_solver) {
       solver_time_init_ = ros::WallTime::now();
     }
-    carrot_mpc_->get_solver()->solve(carrot_mpc_->get_solver()->get_xs(), carrot_mpc_->get_solver()->get_us(),
-                                     carrot_mpc_->get_iters());
+    mpc_controller_->get_solver()->solve(mpc_controller_->get_solver()->get_xs(),
+                                         mpc_controller_->get_solver()->get_us(), mpc_controller_->get_iters());
 
     // PROPERLY HANDLE SOLVER TYPE!
-    control_command_ =
-        boost::static_pointer_cast<multicopter_mpc::SolverSbFDDP>(carrot_mpc_->get_solver())->getSquashControls()[0];
+    control_command_ = boost::static_pointer_cast<multicopter_mpc::SolverSbFDDP>(mpc_controller_->get_solver())
+                           ->getSquashControls()[0];
 
     thrust_command_ = control_command_.head(thrust_command_.size());
-    multicopter_mpc::Tools::thrustToSpeed(thrust_command_, carrot_mpc_->get_platform_params(), speed_command_);
-    if (ros::Duration(ros::Time::now() - control_last_).toSec() > 1.5 * carrot_mpc_->get_dt()) {
+    multicopter_mpc::Tools::thrustToSpeed(thrust_command_, mpc_controller_->get_platform_params(), speed_command_);
+    if (ros::Duration(ros::Time::now() - control_last_).toSec() > 1.5 * mpc_controller_->get_dt()) {
       ROS_WARN("Control rate not accomplished!");
     }
     control_last_ = ros::Time::now();
@@ -191,7 +202,7 @@ void MpcRunner::callbackOdometryMpc(const nav_msgs::OdometryConstPtr &msg_odomet
     }
     pub_thrust_command_.publish(msg_thrusts_);
 
-    for (std::size_t i = 0; i < carrot_mpc_->get_robot_model()->nq - 7; ++i) {
+    for (std::size_t i = 0; i < mpc_controller_->get_robot_model()->nq - 7; ++i) {
       msg_joint_command_.data = control_command_(speed_command_.size() + i);
       pub_arm_commands_[i].publish(msg_joint_command_);
     }
@@ -199,8 +210,8 @@ void MpcRunner::callbackOdometryMpc(const nav_msgs::OdometryConstPtr &msg_odomet
     if (node_params_.record_solver) {
       solver_duration_ = ros::WallTime::now() - solver_time_init_;
       msg_solver_performance_.header.stamp = ros::Time::now();
-      msg_solver_performance_.final_cost = carrot_mpc_->get_solver()->get_cost();
-      msg_solver_performance_.iters = carrot_mpc_->get_solver()->get_iter();
+      msg_solver_performance_.final_cost = mpc_controller_->get_solver()->get_cost();
+      msg_solver_performance_.iters = mpc_controller_->get_solver()->get_iter();
       msg_solver_performance_.solving_time.sec = solver_duration_.sec;
       msg_solver_performance_.solving_time.nsec = solver_duration_.nsec;
       msg_solver_performance_.state_initial.pose = msg_odometry->pose.pose;
@@ -273,7 +284,7 @@ void MpcRunner::callbackJointState(const sensor_msgs::JointStateConstPtr &msg_jo
     mut_state_.lock();
     for (std::size_t i = 0; i < msg_joint_state->position.size(); ++i) {
       state_(7 + i) = msg_joint_state->position[i];
-      state_(carrot_mpc_->get_robot_model()->nq + 6 + i) = msg_joint_state->velocity[i];
+      state_(mpc_controller_->get_robot_model()->nq + 6 + i) = msg_joint_state->velocity[i];
     }
     mut_state_.unlock();
   }

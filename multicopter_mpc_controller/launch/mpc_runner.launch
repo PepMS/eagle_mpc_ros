@@ -13,7 +13,7 @@
   <arg name="trajectory_config" value="$(arg mav_name)_$(arg trajectory_name).yaml" unless="$(arg arm_enable)" />
   <arg name="trajectory_config" value="$(arg mav_name)_$(arg arm_name)_$(arg trajectory_name).yaml" if="$(arg arm_enable)" />
 
-  <arg name="mpc_type" default="carrot_mpc" />
+  <arg name="mpc_type" default="Carrot" />
   <arg name="namespace_mpc" default="$(arg mpc_type)" />
   
   <arg name="mpc_config" value="$(arg mav_name)_mpc.yaml" unless="$(arg arm_enable)" />
@@ -49,6 +49,7 @@
     <param name="trajectory_integration" value="$(arg trajectory_integration)" />
 
     <param name="mpc_config" value="$(find multicopter_mpc_yaml)/mpc/$(arg mpc_config)" />
+    <param name="mpc_type" value="$(arg mpc_type)" />
 
     <param name="use_internal_gains" value="$(arg use_internal_gains)" />
     <param name="record_solver" value="$(arg record_solver)" />
