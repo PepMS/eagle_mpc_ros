@@ -22,18 +22,28 @@ from multicopter_mpc.utils import simulator
 
 
 class MpcController():
-    def __init__(self, trajectoryPath, mpcPath, bagPath=None):
-        dtTrajectory = 10
+    def __init__(self, trajectoryPath, trajectoryDt, trajectorySolver, mpcPath, mpcType, bagPath=None):
         trajectory = multicopter_mpc.Trajectory()
         trajectory.autoSetup(trajectoryPath)
+        squash = False
+        if trajectorySolver == 'SolverSbFDDP':
+            squash = True
 
-        problem = trajectory.createProblem(dtTrajectory, True, "IntegratedActionModelEuler")
+        problem = trajectory.createProblem(trajectoryDt, squash, "IntegratedActionModelEuler")
 
-        solver = multicopter_mpc.SolverSbFDDP(problem, trajectory.squash)
+        if trajectorySolver == 'SolverSbFDDP':
+            solver = multicopter_mpc.SolverSbFDDP(problem, trajectory.squash)
+        elif trajectorySolver == 'SolverBoxFDDP':
+            solver = crocoddyl.SolverBoxFDDP(problem)
+
         solver.setCallbacks([crocoddyl.CallbackVerbose()])
-        solver.solve([], [], maxiter=400)
+        solver.solve([], [], 100)
+        print("Final state: \n", solver.xs[-1])
 
-        self.mpcController = multicopter_mpc.CarrotMpc(trajectory, solver.xs, dtTrajectory, mpcPath)
+        if mpcType == 'Rail':
+            self.mpcController = multicopter_mpc.RailMpc(solver.xs, trajectoryDt, mpcPath)
+        else:
+            self.mpcController = multicopter_mpc.CarrotMpc(trajectory, solver.xs, trajectoryDt, mpcPath)
         self.mpcController.updateProblem(0)
         self.mpcController.solver.solve(solver.xs[:self.mpcController.problem.T + 1],
                                         solver.us[:self.mpcController.problem.T])
@@ -46,11 +56,11 @@ class MpcController():
 
         if bagPath == "":
             self.nTraj = len(solver.xs)
+            self.simDt = 2
             self.simulator = simulator.AerialSimulator(self.mpcController.robot_model,
-                                                       self.mpcController.platform_params, self.mpcController.dt,
-                                                       solver.xs[0])
+                                                       self.mpcController.platform_params, self.simDt, solver.xs[0])
             time = 0
-            for i in range(0, self.nTraj * 2):
+            while time <= (self.nTraj + 100) * trajectoryDt:
                 self.mpcController.problem.x0 = self.simulator.states[-1]
                 self.mpcController.updateProblem(time)
                 self.mpcController.solver.solve(self.mpcController.solver.xs, self.mpcController.solver.us,
@@ -59,7 +69,7 @@ class MpcController():
                 self.simulator.simulateStep(control)
                 self.xss.append(self.mpcController.solver.xs)
                 self.uss.append(self.mpcController.solver.us_squash)
-                time += self.mpcController.dt
+                time += self.simDt
             self.xs = self.simulator.states
             self.us = self.simulator.controls
         else:
@@ -105,14 +115,18 @@ class MpcControllerNode():
         self.rate = rospy.Rate(100)
 
         rospack = rospkg.RosPack()
+
         self.trajectoryPath = rospy.get_param(
             rospy.get_namespace() + "/trajectory_path",
             rospack.get_path('multicopter_mpc_yaml') + '/trajectories/quad_hover.yaml')
         self.mpcPath = rospy.get_param(rospy.get_namespace() + "/mpc_path",
                                        rospack.get_path('multicopter_mpc_yaml') + '/mpc/mpc.yaml')
         self.bagPath = rospy.get_param(rospy.get_namespace() + "/bag_path", "")
-
-        self.mpcController = MpcController(self.trajectoryPath, self.mpcPath, self.bagPath)
+        self.trajectoryDt = rospy.get_param(rospy.get_namespace() + "/trajectory_dt", 10)
+        self.trajectorySolver = rospy.get_param(rospy.get_namespace() + "/trajectory_solver", "SolverSbFDDP")
+        self.mpcType = rospy.get_param(rospy.get_namespace() + "/mpc_type", "carrot")
+        self.mpcController = MpcController(self.trajectoryPath, self.trajectoryDt, self.trajectorySolver, self.mpcPath,
+                                           self.mpcType, self.bagPath)
 
         namespace = rospy.get_namespace()
         with open(self.mpcController.mpcController.robot_model_path, "r") as urdf_file:
@@ -135,10 +149,12 @@ class MpcControllerNode():
                                                 self.mpcController.mpcController.platform_params,
                                                 frame_id="world")
         self.trajectoryPub = WholeBodyTrajectoryPublisher('whole_body_trajectory',
-                                                          self.mpcController.mpcController.trajectory,
+                                                          self.mpcController.mpcController.robot_model,
+                                                          self.mpcController.mpcController.platform_params,
                                                           frame_id="world")
         self.partialTrajectoryPub = WholeBodyTrajectoryPublisher('whole_body_partial_trajectory',
-                                                                 self.mpcController.mpcController.trajectory,
+                                                                 self.mpcController.mpcController.robot_model,
+                                                                 self.mpcController.mpcController.platform_params,
                                                                  frame_id="world")
 
         self.dynRecClient = dynamic_reconfigure.client.Client(
