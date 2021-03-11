@@ -42,6 +42,8 @@ class MpcController():
 
         if mpcType == 'Rail':
             self.mpcController = multicopter_mpc.RailMpc(solver.xs, trajectoryDt, mpcPath)
+        elif mpcType == 'Weighted':
+            self.mpcController = multicopter_mpc.WeightedMpc(trajectory, trajectoryDt, mpcPath)
         else:
             self.mpcController = multicopter_mpc.CarrotMpc(trajectory, solver.xs, trajectoryDt, mpcPath)
         self.mpcController.updateProblem(0)
@@ -112,7 +114,7 @@ class MpcControllerNode():
     def __init__(self):
         rospy.init_node('controller', anonymous=True)
 
-        self.rate = rospy.Rate(100)
+        self.rate = rospy.Rate(500)
 
         rospack = rospkg.RosPack()
 
@@ -162,7 +164,7 @@ class MpcControllerNode():
             config_callback=self.callbackTrajectoryIdx)
 
         self.trajectoryTimer = rospy.Timer(rospy.Duration(2), self.callbackTrajectoryTimer)
-        self.stateTimer = rospy.Timer(rospy.Duration(0.1), self.callbackStateTimer)
+        self.stateTimer = rospy.Timer(rospy.Duration(0.002), self.callbackStateTimer)
 
         self.idxTrj = 0
 

@@ -77,6 +77,9 @@ void MpcRunner::initializeMpcController() {
       mpc_controller_ = boost::make_shared<multicopter_mpc::RailMpc>(solver->get_xs(), node_params_.trajectory_dt,
                                                                      node_params_.mpc_config_path);
       break;
+    case multicopter_mpc::MpcTypes::Weighted:
+      mpc_controller_ = boost::make_shared<multicopter_mpc::WeightedMpc>(trajectory_, node_params_.trajectory_dt,
+                                                                         node_params_.mpc_config_path);
   }
 
   if (mpc_controller_->get_solver_type() == multicopter_mpc::SolverTypes::SolverSbFDDP) {

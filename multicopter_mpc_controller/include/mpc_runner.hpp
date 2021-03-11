@@ -25,6 +25,7 @@
 #include "multicopter_mpc/trajectory.hpp"
 #include "multicopter_mpc/mpc-controllers/carrot-mpc.hpp"
 #include "multicopter_mpc/mpc-controllers/rail-mpc.hpp"
+#include "multicopter_mpc/mpc-controllers/weighted-mpc.hpp"
 #include "multicopter_mpc/mpc-base.hpp"
 
 class MpcRunner {
