@@ -2,21 +2,21 @@ trajectory:
   robot:
     name: "hexacopter370"
     urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/hexacopter370_description/urdf/hexacopter370.urdf"
-    follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/hexacopter370.yaml"
+    follow: "/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/multicopter/hexacopter370.yaml"
 
   stages:
     - name: "navigation"
       duration: 2000 #ms
       transition: true
       costs:
-        - name: "state_reg"
+        - name: "reg_state"
           type: "CostModelState"
           weight: 1e-5
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
-        - name: "control_reg"
+        - name: "reg_control"
           type: "CostModelControl"
           weight: 5e-2
           reference: [0, 0, 0, 0, 0, 0]
@@ -26,7 +26,7 @@ trajectory:
     - name: "hover"
       duration: 0 #ms
       costs:
-        - name: "control_reg"
+        - name: "reg_control"
           type: "CostModelControl"
           weight: 5e-2
           reference: [0, 0, 0, 0, 0, 0]

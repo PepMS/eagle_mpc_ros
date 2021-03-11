@@ -9,21 +9,21 @@ trajectory:
   robot:
     name: "hexacopter370"
     urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/hexacopter370_description/urdf/hexacopter370.urdf"
-    follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/hexacopter370.yaml"
+    follow: "/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/multicopter/hexacopter370.yaml"
 
   stages:
     - name: "nav_wp1"
       duration: 2000 #ms
       transition: true
       costs:
-        - name: "state_reg"
+        - name: "reg_state"
           type: "CostModelState"
           weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
-        - name: "control_reg"
+        - name: "reg_control"
           type: "CostModelControl"
           weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0]
@@ -33,14 +33,14 @@ trajectory:
     - name: "wp1"
       duration: 0 #ms
       costs:
-        - name: "state_reg"
+        - name: "reg_state"
           type: "CostModelState"
           weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
-        - name: "control_reg"
+        - name: "reg_control"
           type: "CostModelControl"
           weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0]
@@ -65,14 +65,14 @@ trajectory:
       duration: 1400 #ms
       transition: true
       costs:
-        - name: "state_reg"
+        - name: "reg_state"
           type: "CostModelState"
           weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
-        - name: "control_reg"
+        - name: "reg_control"
           type: "CostModelControl"
           weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0]
@@ -82,14 +82,14 @@ trajectory:
     - name: "wp2"
       duration: 0 #ms
       costs:
-        - name: "state_reg"
+        - name: "reg_state"
           type: "CostModelState"
           weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
-        - name: "control_reg"
+        - name: "reg_control"
           type: "CostModelControl"
           weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0]
@@ -114,14 +114,14 @@ trajectory:
       duration: 1500 #ms
       transition: true
       costs:
-        - name: "state_reg"
+        - name: "reg_state"
           type: "CostModelState"
           weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
-        - name: "control_reg"
+        - name: "reg_control"
           type: "CostModelControl"
           weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0]
@@ -131,14 +131,14 @@ trajectory:
     - name: "wp3"
       duration: 0 #ms
       costs:
-        - name: "state_reg"
+        - name: "reg_state"
           type: "CostModelState"
           weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
-        - name: "control_reg"
+        - name: "reg_control"
           type: "CostModelControl"
           weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0]

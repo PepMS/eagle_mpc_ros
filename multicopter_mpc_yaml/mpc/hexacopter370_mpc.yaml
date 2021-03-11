@@ -2,11 +2,11 @@ mpc_controller:
   robot:
     name: "hexacopter370"
     urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/hexacopter370_description/urdf/hexacopter370.urdf"
-    follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/hexacopter370.yaml"
+    follow: "/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/multicopter/hexacopter370.yaml"
   integration_method: "IntegratedActionModelEuler"
-  knots: 51
+  knots: 50
   solver: "SolverSbFDDP"
-  iters: 2
+  iters: 15
   dt: 20
   
   carrot_weight: 1000
@@ -14,3 +14,8 @@ mpc_controller:
   rail_weight: 100
   rail_activation_weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
   rail_control_weight: 1e-1
+
+  weighted_alpha: 9.0
+  weighted_beta: 0.7
+  weighted_state_reg: 1e-1
+  weighted_control_reg: 1e-3
