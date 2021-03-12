@@ -6,7 +6,7 @@ mpc_controller:
   integration_method: "IntegratedActionModelEuler"
   knots: 50
   solver: "SolverSbFDDP"
-  iters: 15
+  iters: 1
   dt: 20
   
   carrot_weight: 1000

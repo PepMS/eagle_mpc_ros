@@ -44,6 +44,9 @@ void MpcRunner::initializeParameters() {
   int motor_command_dt;
   nh_.param<int>(ros::this_node::getNamespace() + "/motor_command_dt", motor_command_dt, 0);
   node_params_.motor_command_dt = (std::size_t)motor_command_dt;
+
+  nh_.param<bool>(ros::this_node::getNamespace() + "/disturbance_enable", node_params_.disturbance_enable, false);
+  nh_.param<double>(ros::this_node::getNamespace() + "/disturbance_time", node_params_.disturbance_time, 2.0);
 }
 
 void MpcRunner::initializeMpcController() {
@@ -137,6 +140,10 @@ void MpcRunner::initializeSubscribers() {
     subs_joint_state_ =
         nh_.subscribe("/joint_states", 1, &MpcRunner::callbackJointState, this, ros::TransportHints().tcpNoDelay());
   }
+
+  if (node_params_.disturbance_enable) {
+    timer_disturbance_ = nh_.createTimer(ros::Duration(0.1), &MpcRunner::callbackDisturbance, this);
+  }
 }
 
 void MpcRunner::initializePublishers() {
@@ -152,6 +159,10 @@ void MpcRunner::initializePublishers() {
     for (std::size_t i = 0; i < n_joints; ++i) {
       pub_arm_commands_.push_back(nh_.advertise<std_msgs::Float64>("/joint_command_" + std::to_string(i + 1), 1));
     }
+  }
+
+  if (node_params_.disturbance_enable) {
+    pub_disturbance_ = nh_.advertise<std_msgs::Bool>("/disturbance_enable", 1);
   }
 }
 
@@ -322,6 +333,14 @@ void MpcRunner::callbackConfig(multicopter_mpc_controller::ParamsConfig &config,
   if (controller_started_) {
     controller_start_time_ = ros::Time::now();
   }
+}
+
+void MpcRunner::callbackDisturbance(const ros::TimerEvent &) {
+  msg_disturbance_.data = false;
+  if ((ros::Time::now() - controller_start_time_).toSec() > node_params_.disturbance_time && controller_started_) {
+    msg_disturbance_.data = true;
+  }
+  pub_disturbance_.publish(msg_disturbance_);
 }
 
 int main(int argc, char **argv) {

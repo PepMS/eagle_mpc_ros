@@ -10,8 +10,11 @@
   <!-- The following line causes gzmsg and gzerr messages to be printed to the console
       (even when Gazebo is started through roslaunch) -->
   <arg name="verbose" default="false" />
-  <arg name="arm_enable" default="true" />
-  <arg name="arm_name" default="flying_arm_5" />
+  <arg name="arm_enable" default="false" />
+  <arg name="arm_name" default="flying_arm_3" />
+
+  <arg name="disturbance_enable" default="false" />
+  <arg name="disturbance_start" value="10" />
 
   <env name="GAZEBO_MODEL_PATH" value="${GAZEBO_MODEL_PATH}:$(find rotors_gazebo)/models" />
   <env name="GAZEBO_RESOURCE_PATH" value="${GAZEBO_RESOURCE_PATH}:$(find rotors_gazebo)/models" />
@@ -23,13 +26,16 @@
     <arg name="verbose" value="$(arg verbose)" />
   </include>
 
+
   <include file="$(find rotors_gazebo)/launch/aerial_manipulator.launch">
     <arg name="mav_name" value="$(arg mav_name)" />
-    <arg name="model" value="$(find rotors_description)/urdf/mav_generic_odometry_sensor.gazebo" />
+    <arg name="model" value="$(find rotors_description)/urdf/mav_generic_odometry_sensor.gazebo" unless="$(arg disturbance_enable)" />
+    <arg name="model" value="$(find rotors_description)/urdf/mav_with_wind_gust.gazebo" if="$(arg disturbance_enable)" />
     <arg name="enable_logging" value="$(arg enable_logging)" />
     <arg name="enable_ground_truth" value="$(arg enable_ground_truth)" />
     <arg name="log_file" value="$(arg log_file)" />
     <arg name="arm_enable" value="$(arg arm_enable)" />
     <arg name="arm_name" value="$(arg arm_name)" />
+    <arg name="disturbance_start" value="$(arg disturbance_start)" />
   </include>
 </launch>
