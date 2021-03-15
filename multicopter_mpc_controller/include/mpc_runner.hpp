@@ -47,7 +47,6 @@ class MpcRunner {
   void callbackJointState(const sensor_msgs::JointStateConstPtr &msg_joint_state);
   void callbackConfig(multicopter_mpc_controller::ParamsConfig &config, uint32_t level);
   void callbackMpcSolve(const ros::TimerEvent &);
-  void callbackDisturbance(const ros::TimerEvent &);
 
   // ROS objects & methods
   ros::NodeHandle nh_;
@@ -62,7 +61,6 @@ class MpcRunner {
   ros::Publisher pub_arm_command_;
   ros::Publisher pub_disturbance_;
   ros::Timer timer_mpc_solve_;
-  ros::Timer timer_disturbance_;
 
   dynamic_reconfigure::Server<multicopter_mpc_controller::ParamsConfig> server_;
   dynamic_reconfigure::Server<multicopter_mpc_controller::ParamsConfig>::CallbackType callback_server_;
@@ -74,7 +72,6 @@ class MpcRunner {
   multicopter_mpc_msgs::MotorsState msg_motors_state_;
   std_msgs::Float64 msg_joint_command_;
   std::mutex mut_motors_state_;
-  std_msgs::Bool msg_disturbance_;
 
   // Mpc Related
   boost::shared_ptr<multicopter_mpc::Trajectory> trajectory_;
@@ -97,9 +94,6 @@ class MpcRunner {
     bool use_internal_gains;
     bool record_solver;
     std::size_t motor_command_dt;
-
-    bool disturbance_enable;
-    double disturbance_time;
 
   } node_params_;
 
