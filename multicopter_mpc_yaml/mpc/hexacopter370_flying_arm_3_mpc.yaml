@@ -2,7 +2,7 @@ mpc_controller:
   robot:
     name: "hexacopter370"
     urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/hexacopter370_description/urdf/hexacopter370_flying_arm_3.urdf"
-    follow: "/home/pepms/robotics/libraries/multicopter-mpc/config/multicopter/hexacopter370.yaml"
+    follow: "/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/multicopter/hexacopter370.yaml"
   integration_method: "IntegratedActionModelEuler"
   knots: 30
   solver: "SolverSbFDDP"
