@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="mav_name" default="firefly"/>
+  <arg name="namespace" default="$(arg mav_name)"/>
+  <arg name="tf_prefix" default="$(optenv ROS_NAMESPACE)"/>
+  <arg name="x" default="0.0"/>
+  <arg name="y" default="0.0"/>
+  <arg name="z" default="0.3"/>
+  <arg name="enable_logging" default="false"/>
+  <arg name="enable_ground_truth" default="false"/>
+  <arg name="log_file" default="$(arg mav_name)"/>
+  <arg name="wait_to_record_bag" default="false"/>
+  <arg name="enable_mavlink_interface" default="false"/>
+  
+  <arg name="arm_enable" default="false"/>
+  <arg name="arm_name" default="flying_arm_3"/>
+
+  <arg name="disturbance_enable" default="false"/>
+  <arg name="disturbance_external_trigger" default="false"/>
+  <arg name="disturbance_start" default="3" />
+  <arg name="disturbance_duration" default="4" />
+  <arg name="disturbance_force" default="5" />
+  <arg name="disturbance_direction" default="0 0 0" />
+
+  <arg name="model" value="$(find rotors_description)/urdf/mav_generic_odometry_sensor.gazebo" unless="$(arg disturbance_enable)" />
+  <arg name="model" value="$(find multicopter_mpc_simulator)/description/mav_with_wind_gust.gazebo" if="$(arg disturbance_enable)" />
+
+  <!-- send the robot XML to param server -->
+  <param name="robot_description" command="
+    $(find xacro)/xacro '$(arg model)'
+    enable_logging:=$(arg enable_logging)
+    enable_ground_truth:=$(arg enable_ground_truth)
+    enable_mavlink_interface:=$(arg enable_mavlink_interface)
+    log_file:=$(arg log_file)
+    wait_to_record_bag:=$(arg wait_to_record_bag)
+    mav_name:=$(arg mav_name)
+    namespace:=$(arg namespace)
+    arm_enable:=$(arg arm_enable)
+    arm_name:=$(arg arm_name)
+    external_trigger:=$(arg disturbance_external_trigger)
+    wind_gust_direction:='$(arg disturbance_direction)'
+    wind_gust_duration:=$(arg disturbance_duration)
+    wind_gust_start:=$(arg disturbance_start)
+    wind_gust_force_mean:=$(arg disturbance_force)"
+    />
+  <param name="tf_prefix" type="string" value="$(arg tf_prefix)" />
+
+  
+  <!-- push robot_description to factory and spawn robot in gazebo -->
+  <node name="spawn_$(arg namespace)" pkg="gazebo_ros" type="spawn_model"
+   args="-param robot_description
+         -urdf
+         -x $(arg x)
+         -y $(arg y)
+         -z $(arg z)
+         -model $(arg namespace)"
+   respawn="false" output="screen">
+  </node>
+</launch>
