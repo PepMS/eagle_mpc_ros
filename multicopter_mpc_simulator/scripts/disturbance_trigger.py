@@ -12,6 +12,9 @@ class DisturbanceTriggerNode():
         self.dynRecClient = dynamic_reconfigure.client.Client("/" + rospy.get_namespace() + "/mpc_controller",
                                                               config_callback=self.callbackStartController)
 
+        self.disturbanceStart = rospy.get_param(rospy.get_namespace() + "/disturbance_start", 2.0)
+        self.disturbanceDuration = rospy.get_param(rospy.get_namespace() + "/disturbance_duration", 2.0)
+
         self.timerDisturbanceTrigger = rospy.Timer(rospy.Duration(0.1), self.callbackDisturbanceTrigger)
         self.disturbanceTriggerPub = rospy.Publisher("/disturbance_enable", Bool, queue_size=1)
         self.controllerStartTime = rospy.Time.now()
@@ -24,10 +27,9 @@ class DisturbanceTriggerNode():
     def callbackDisturbanceTrigger(self, event):
         msg = Bool()
         msg.data = False
-        disturbanceStartTime = 2.0
-        disturbanceDuration = 2.0
-        if (rospy.Time.now() - self.controllerStartTime).to_sec() > disturbanceStartTime and (rospy.Time.now(
-        ) - self.controllerStartTime).to_sec() < disturbanceDuration + disturbanceStartTime and self.controllerStarted:
+        if (rospy.Time.now() - self.controllerStartTime).to_sec() > self.disturbanceStart and (
+                rospy.Time.now() - self.controllerStartTime
+        ).to_sec() < self.disturbanceDuration + self.disturbanceStart and self.controllerStarted:
             msg.data = True
 
         self.disturbanceTriggerPub.publish(msg)

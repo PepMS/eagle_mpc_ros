@@ -23,13 +23,12 @@
 
   <!-- Disturbance configuration -->
   <arg name="disturbance_enable" default="false" />
-  <arg name="disturbance_start" default="3" />
-  <arg name="disturbance_duration" default="4" />
+  <arg name="disturbance_start" default="2" />
+  <arg name="disturbance_duration" default="2" />
   <arg name="disturbance_force" default="6" />
   <arg name="disturbance_direction" default="1 1 0" />
-  
+
   <!-- PARAMETERS -->
-  <arg name="trajectory_namespace" value="tg_$(arg trajectory_name)" />
   <arg name="trajectory_config" value="$(arg mav_name)_$(arg trajectory_name).yaml" unless="$(arg arm_enable)" />
   <arg name="trajectory_config" value="$(arg mav_name)_$(arg arm_name)_$(arg trajectory_name).yaml" if="$(arg arm_enable)" />
 
@@ -71,9 +70,6 @@
     <param name="motor_command_dt" value="$(arg motor_command_dt)" if="$(arg use_internal_gains)" />
     <param name="arm_name" value="$(arg arm_name)" if="$(arg arm_enable)" />
 
-    <param name="disturbance_enable" value="$(arg disturbance_enable)" />
-    <!-- <param name="disturbance_time" value="$(arg disturbance_time)" /> -->
-
     <node name="mpc_controller" pkg="multicopter_mpc_controller" type="mpc_runner_node" output="screen">
       <remap from="/odometry" to="/$(arg mav_name)/ground_truth/odometry" if="$(arg groundtruth)" />
       <remap from="/odometry" to="/$(arg mav_name)/odometry_sensor1/odometry" unless="$(arg groundtruth)" />
@@ -84,14 +80,18 @@
       <remap from="/joint_command_3" to="/$(arg mav_name)/joint3_effort_controller/command" if="$(arg arm_enable)" />
     </node>
 
-    <node name="disturbance_trigger" pkg="multicopter_mpc_simulator" type="disturbance_trigger.py" output="screen" if="$(arg disturbance_enable)">
-      <remap from="/disturbance_enable" to="/$(arg mav_name)/disturbance_enable" />
-    </node>
+    <group if="$(arg disturbance_enable)">
+      <param name="disturbance_start" value="$(arg disturbance_start)" />
+      <param name="disturbance_duration" value="$(arg disturbance_duration)" />
+
+      <node name="disturbance_trigger" pkg="multicopter_mpc_simulator" type="disturbance_trigger.py" output="screen">
+        <remap from="/disturbance_enable" to="/$(arg mav_name)/disturbance_enable" />
+      </node>
+    </group>
   </group>
 
   <!-- VISUALIZER -->
   <include file="$(find multicopter_mpc_viz)/launch/trajectory_generator_viz.launch">
-    <arg name="namespace" value="$(arg trajectory_namespace)" />
     <arg name="trajectory_config" value="$(arg trajectory_config)" />
     <arg name="launch_tools" value="false" />
   </include>
