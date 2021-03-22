@@ -211,23 +211,7 @@ void MpcRunner::callbackOdometryMpc(const nav_msgs::OdometryConstPtr &msg_odomet
     }
 
     if (node_params_.record_solver) {
-      solver_duration_ = ros::WallTime::now() - solver_time_init_;
-      msg_solver_performance_.header.stamp = ros::Time::now();
-      msg_solver_performance_.final_cost = mpc_controller_->get_solver()->get_cost();
-      msg_solver_performance_.iters = mpc_controller_->get_solver()->get_iter();
-      msg_solver_performance_.solving_time.sec = solver_duration_.sec;
-      msg_solver_performance_.solving_time.nsec = solver_duration_.nsec;
-      msg_solver_performance_.state_initial.pose = msg_odometry->pose.pose;
-      msg_solver_performance_.state_initial.motion = msg_odometry->twist.twist;
-      pub_solver_performance_.publish(msg_solver_performance_);
-
-      msg_whole_body_state_.header.stamp = msg_odometry->header.stamp;
-      msg_whole_body_state_.floating_base.pose = msg_odometry->pose.pose;
-      msg_whole_body_state_.floating_base.motion = msg_odometry->twist.twist;
-      for (std::size_t i = 0; i < speed_command_.size(); ++i) {
-        msg_whole_body_state_.thrusts[i].speed_command = speed_command_(i);
-      }
-      pub_whole_body_state_.publish(msg_whole_body_state_);
+      publishSolver(msg_odometry);
     }
   }
 }
@@ -322,6 +306,26 @@ void MpcRunner::callbackConfig(multicopter_mpc_controller::ParamsConfig &config,
   if (controller_started_) {
     controller_start_time_ = ros::Time::now();
   }
+}
+
+void MpcRunner::publishSolver(const nav_msgs::OdometryConstPtr &msg_odometry) {
+  solver_duration_ = ros::WallTime::now() - solver_time_init_;
+  msg_solver_performance_.header.stamp = ros::Time::now();
+  msg_solver_performance_.final_cost = mpc_controller_->get_solver()->get_cost();
+  msg_solver_performance_.iters = mpc_controller_->get_solver()->get_iter();
+  msg_solver_performance_.solving_time.sec = solver_duration_.sec;
+  msg_solver_performance_.solving_time.nsec = solver_duration_.nsec;
+  msg_solver_performance_.state_initial.pose = msg_odometry->pose.pose;
+  msg_solver_performance_.state_initial.motion = msg_odometry->twist.twist;
+  pub_solver_performance_.publish(msg_solver_performance_);
+
+  msg_whole_body_state_.header.stamp = msg_odometry->header.stamp;
+  msg_whole_body_state_.floating_base.pose = msg_odometry->pose.pose;
+  msg_whole_body_state_.floating_base.motion = msg_odometry->twist.twist;
+  for (std::size_t i = 0; i < speed_command_.size(); ++i) {
+    msg_whole_body_state_.thrusts[i].speed_command = speed_command_(i);
+  }
+  pub_whole_body_state_.publish(msg_whole_body_state_);
 }
 
 int main(int argc, char **argv) {
