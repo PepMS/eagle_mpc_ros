@@ -6,6 +6,8 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /WholeBodyTrajectory1
+        - /RobotModel1
         - /TF1
         - /TF1/Frames1
       Splitter Ratio: 0.47807931900024414
@@ -69,57 +71,47 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        hexacopter370/base_link:
+        iris/base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        hexacopter370/base_link_inertia:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        hexacopter370/imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        hexacopter370/imugt_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        hexacopter370/odometry_sensor1_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        hexacopter370/odometry_sensorgt_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        hexacopter370/rotor_0:
+        iris/base_link_inertia:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        hexacopter370/rotor_1:
+        iris/imu_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        iris/imugt_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        iris/odometry_sensor1_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        iris/odometry_sensorgt_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        iris/rotor_0:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        hexacopter370/rotor_2:
+        iris/rotor_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        hexacopter370/rotor_3:
+        iris/rotor_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        hexacopter370/rotor_4:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        hexacopter370/rotor_5:
+        iris/rotor_3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -135,7 +127,7 @@ Visualization Manager:
         Robot Collision: false
         Robot Description: robot_description
         Robot Visual: true
-      Topic: /tg_hover/whole_body_trajectory
+      Topic: /trajectory_generation/whole_body_trajectory
       Unreliable: false
       Value: true
     - Alpha: 1
@@ -148,57 +140,47 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        hexacopter370/base_link:
+        iris/base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        hexacopter370/base_link_inertia:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        hexacopter370/imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        hexacopter370/imugt_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        hexacopter370/odometry_sensor1_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        hexacopter370/odometry_sensorgt_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        hexacopter370/rotor_0:
+        iris/base_link_inertia:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        hexacopter370/rotor_1:
+        iris/imu_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        iris/imugt_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        iris/odometry_sensor1_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        iris/odometry_sensorgt_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        iris/rotor_0:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        hexacopter370/rotor_2:
+        iris/rotor_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        hexacopter370/rotor_3:
+        iris/rotor_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        hexacopter370/rotor_4:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        hexacopter370/rotor_5:
+        iris/rotor_3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -214,24 +196,20 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        hexacopter370/base_link:
+        iris/base_link:
           Value: true
-        hexacopter370/base_link_inertia:
-          Value: false
-        hexacopter370/odometry_sensor1:
-          Value: false
-        hexacopter370/rotor_0:
-          Value: false
-        hexacopter370/rotor_1:
-          Value: false
-        hexacopter370/rotor_2:
-          Value: false
-        hexacopter370/rotor_3:
-          Value: false
-        hexacopter370/rotor_4:
-          Value: false
-        hexacopter370/rotor_5:
-          Value: false
+        iris/base_link_inertia:
+          Value: true
+        iris/odometry_sensor1:
+          Value: true
+        iris/rotor_0:
+          Value: true
+        iris/rotor_1:
+          Value: true
+        iris/rotor_2:
+          Value: true
+        iris/rotor_3:
+          Value: true
         map:
           Value: false
         world:
@@ -245,22 +223,18 @@ Visualization Manager:
       Tree:
         map:
           world:
-            hexacopter370/base_link:
-              hexacopter370/base_link_inertia:
+            iris/base_link:
+              iris/base_link_inertia:
                 {}
-              hexacopter370/rotor_0:
+              iris/rotor_0:
                 {}
-              hexacopter370/rotor_1:
+              iris/rotor_1:
                 {}
-              hexacopter370/rotor_2:
+              iris/rotor_2:
                 {}
-              hexacopter370/rotor_3:
+              iris/rotor_3:
                 {}
-              hexacopter370/rotor_4:
-                {}
-              hexacopter370/rotor_5:
-                {}
-            hexacopter370/odometry_sensor1:
+            iris/odometry_sensor1:
               {}
       Update Interval: 0
       Value: true
@@ -292,7 +266,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 5.7315673828125
+      Distance: 17.54503631591797
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -308,9 +282,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4053981304168701
+      Pitch: 0.3453981280326843
       Target Frame: <Fixed Frame>
-      Yaw: 0.8353979587554932
+      Yaw: 0.5553982257843018
     Saved: ~
 Window Geometry:
   Displays:

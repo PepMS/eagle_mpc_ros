@@ -48,6 +48,7 @@ class MpcRunner {
   void callbackConfig(multicopter_mpc_controller::ParamsConfig &config, uint32_t level);
   void callbackMpcSolve(const ros::TimerEvent &);
 
+  void publishSolver(const nav_msgs::OdometryConstPtr &msg_odometry);
   // ROS objects & methods
   ros::NodeHandle nh_;
 
