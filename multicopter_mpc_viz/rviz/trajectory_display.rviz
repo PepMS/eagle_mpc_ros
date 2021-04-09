@@ -61,7 +61,7 @@ Visualization Manager:
         Alpha: 0.5
         Axes Scale: 4
         Enable: true
-        Line Color: 255; 255; 51
+        Line Color: 196; 160; 0
         Line Style: Billboards
         Line Width: 0.009999999776482582
       Class: multicopter_mpc_rviz_plugins/WholeBodyTrajectory
@@ -72,36 +72,65 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        iris__/imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        iris__base_link:
+        flying_arm_3__base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_0:
+        flying_arm_3__link_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_1:
+        flying_arm_3__link_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_2:
+        flying_arm_3__link_3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_3:
+        hexacopter370__base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hexacopter370__rotor_0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hexacopter370__rotor_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hexacopter370__rotor_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hexacopter370__rotor_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hexacopter370__rotor_4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hexacopter370__rotor_5:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
       Name: WholeBodyTrajectory
+      Placements:
+        Alpha: 1
+        Enable: true
       Queue Size: 10
       Robot:
         Enable: true
@@ -112,9 +141,6 @@ Visualization Manager:
       Topic: /trajectory_generation/whole_body_trajectory
       Unreliable: false
       Value: true
-      Waypoints:
-        Alpha: 1
-        Enable: true
     - Class: multicopter_mpc_rviz_plugins/WholeBodyState
       Enabled: true
       Links:
@@ -123,31 +149,57 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        iris__/imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        iris__base_link:
+        flying_arm_3__base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_0:
+        flying_arm_3__link_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_1:
+        flying_arm_3__link_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_2:
+        flying_arm_3__link_3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        iris__rotor_3:
+        hexacopter370__base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hexacopter370__rotor_0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hexacopter370__rotor_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hexacopter370__rotor_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hexacopter370__rotor_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hexacopter370__rotor_4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hexacopter370__rotor_5:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -173,7 +225,7 @@ Visualization Manager:
       Value: true
   Enabled: true
   Global Options:
-    Background Color: 48; 48; 48
+    Background Color: 211; 215; 207
     Default Light: true
     Fixed Frame: map
     Frame Rate: 30
@@ -199,7 +251,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 6.85716438293457
+      Distance: 8.55515193939209
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -215,9 +267,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7303982377052307
+      Pitch: 0.31539830565452576
       Target Frame: <Fixed Frame>
-      Yaw: 0.6203963160514832
+      Yaw: 4.3135786056518555
     Saved: ~
 Window Geometry:
   Displays:
