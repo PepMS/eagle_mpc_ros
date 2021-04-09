@@ -102,7 +102,8 @@ class TrajectoryNode():
             self.continuous_player = False
             config.continuous_player = False
             self.trj_idx = int((len(self.xs) - 1) * self.trajectory_percentage / 100)
-            rospy.loginfo("Trajectory index: %d / %d", self.trj_idx, len(self.xs) - 1)
+            t = self.dt * (self.trj_idx) / 1000
+            rospy.loginfo("Trajectory index: %d / %d, Trajectory time: %f", self.trj_idx, len(self.xs) - 1, t)
 
         return config
 
@@ -115,6 +116,7 @@ class TrajectoryNode():
 
     def callbackStateTimer(self, timer):
         x = self.xs[self.trj_idx]
+        t = self.dt * (self.trj_idx) / 1000
         if self.continuous_player:
             if self.trj_idx < len(self.xs) - 1:
                 self.trj_idx += 1
@@ -123,7 +125,7 @@ class TrajectoryNode():
 
         nq = self.trajectory.trajectory.robot_model.nq
         nrotors = self.trajectory.trajectory.platform_params.n_rotors
-        self.state_publisher.publish(0.123, x[:nq], x[nq:], self.us[self.trj_idx][:nrotors],
+        self.state_publisher.publish(t, x[:nq], x[nq:], self.us[self.trj_idx][:nrotors],
                                      self.us[self.trj_idx][nrotors:])
         self.publishFixedTransform()
 
