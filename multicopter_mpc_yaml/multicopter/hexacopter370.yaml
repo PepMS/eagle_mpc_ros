@@ -7,31 +7,25 @@ platform:
   n_rotors: 6
   $rotors:
     - translation: [0.1602147, 0.0925, 0.0]
-      # orientation: [0, 0, 0.258819, 0.965926] # x, y, z, w
-      orientation: [0, 0, 0, 1] # x, y, z, w
+      orientation: [0, 0, 0.258819, 0.965926] # x, y, z, w
       spin_direction: [-1]
 
     - translation: [0.0, 0.185, 0.0]
-      # orientation: [0, 0, 0.707107, 0.707107]
-      orientation: [0, 0, 0, 1] # x, y, z, w
+      orientation: [0, 0, 0.707107, 0.707107]
       spin_direction: [1]
 
     - translation: [-0.1602147, 0.0925, 0.0]
-      # orientation: [0, 0, 0.965926, 0.258819]
-      orientation: [0, 0, 0, 1]
+      orientation: [0, 0, 0.965926, 0.258819]
       spin_direction: [-1]
 
     - translation: [-0.1602147, -0.0925, 0.0]
-      # orientation: [0, 0, 0.965926, -0.258819]
-      orientation: [0, 0, 0, 1]
+      orientation: [0, 0, 0.965926, -0.258819]
       spin_direction: [1]
 
     - translation: [0.0, -0.185, 0.0]
-      # orientation: [0, 0, -0.707107, 0.707107]
-      orientation: [0, 0, 0, 1]
+      orientation: [0, 0, -0.707107, 0.707107]
       spin_direction: [-1]
 
     - translation: [0.1602147, -0.0925, 0.0]
-      # orientation: [0, 0, -0.258819, 0.965926]
-      orientation: [0, 0, 0, 1]
+      orientation: [0, 0, -0.258819, 0.965926]
       spin_direction: [1]

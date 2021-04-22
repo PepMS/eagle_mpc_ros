@@ -1,6 +1,6 @@
 trajectory:
   robot:
-    name: "hexarotor_370_flying_arm_3"
+    name: "hexacopter370_flying_arm_3"
     urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/hexacopter370_description/urdf/hexacopter370_flying_arm_3.urdf"
     follow: "/home/pepms/wsros/mpc-ws/src/multicopter_mpc/multicopter_mpc_yaml/multicopter/hexacopter370.yaml"
 
