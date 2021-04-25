@@ -18,13 +18,13 @@ trajectory:
 
         - name: "limits_state"
           type: "CostModelState"
-          weight: 10
+          weight: 100
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuadraticBarrier"
           weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
-          u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
+          u_bound: [0, 0, 0, 0, 0, 0, 1.5, 1.5, 1.5, 0, 0, 0, 0, 0, 0, 3, 3, 3]
           l_bound:
-            [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
+            [0, 0, 0, 0, 0, 0, -1.5, -1.5, -1.5, 0, 0, 0, 0, 0, 0, -3, -3, -3]
 
         - name: "reg_control"
           type: "CostModelControl"
@@ -70,13 +70,13 @@ trajectory:
 
         - name: "limits_state"
           type: "CostModelState"
-          weight: 10
+          weight: 100
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuadraticBarrier"
           weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
-          u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
+          u_bound: [0, 0, 0, 0, 0, 0, 1.5, 1.5, 1.5, 0, 0, 0, 0, 0, 0, 3, 3, 3]
           l_bound:
-            [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
+            [0, 0, 0, 0, 0, 0, -1.5, -1.5, -1.5, 0, 0, 0, 0, 0, 0, -3, -3, -3]
 
         - name: "reg_control"
           type: "CostModelControl"
@@ -122,13 +122,13 @@ trajectory:
 
         - name: "limits_state"
           type: "CostModelState"
-          weight: 10
+          weight: 100
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuadraticBarrier"
           weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
-          u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
+          u_bound: [0, 0, 0, 0, 0, 0, 1.5, 1.5, 1.5, 0, 0, 0, 0, 0, 0, 3, 3, 3]
           l_bound:
-            [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
+            [0, 0, 0, 0, 0, 0, -1.5, -1.5, -1.5, 0, 0, 0, 0, 0, 0, -3, -3, -3]
 
         - name: "reg_control"
           type: "CostModelControl"
@@ -174,13 +174,13 @@ trajectory:
 
         - name: "limits_state"
           type: "CostModelState"
-          weight: 10
+          weight: 100
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuadraticBarrier"
           weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
-          u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
+          u_bound: [0, 0, 0, 0, 0, 0, 1.5, 1.5, 1.5, 0, 0, 0, 0, 0, 0, 3, 3, 3]
           l_bound:
-            [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
+            [0, 0, 0, 0, 0, 0, -1.5, -1.5, -1.5, 0, 0, 0, 0, 0, 0, -3, -3, -3]
 
         - name: "reg_control"
           type: "CostModelControl"
@@ -201,13 +201,13 @@ trajectory:
 
         - name: "limits_state"
           type: "CostModelState"
-          weight: 10
+          weight: 100
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuadraticBarrier"
           weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
-          u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
+          u_bound: [0, 0, 0, 0, 0, 0, 1.5, 1.5, 1.5, 0, 0, 0, 0, 0, 0, 3, 3, 3]
           l_bound:
-            [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
+            [0, 0, 0, 0, 0, 0, -1.5, -1.5, -1.5, 0, 0, 0, 0, 0, 0, -3, -3, -3]
 
         - name: "reg_control"
           type: "CostModelControl"
@@ -216,17 +216,24 @@ trajectory:
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1]
 
-        - name: "placement_base_link"
+        - name: "placement_gripper"
           type: "CostModelFramePlacement"
-          weight: 2000
-          link_name: "flying_arm_3__link_3"
+          weight: 3000
+          link_name: "flying_arm_3__gripper"
           position: [0, 1, 2]
           orientation: [1, 0, 0, 1] # x,y,z,w
 
-        - name: "motion_base_link"
+        - name: "motion_gripper"
           type: "CostModelFrameVelocity"
           weight: 1000
-          link_name: "flying_arm_3__link_3"
+          link_name: "flying_arm_3__gripper"
           linear: [0, 0, 0]
           angular: [0, 0, 0]
+
+
+        - name: "orientation_base_link"
+          type: "CostModelFrameRotation"
+          weight: 2000
+          link_name: "hexacopter370__base_link"
+          orientation: [0, 0, 0, 1] # x,y,z,w
 
