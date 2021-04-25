@@ -61,14 +61,14 @@ class WholeBodyStateInterface():
             self._msg.thrusts.append(th)
 
         self._msg.joints = []
-        if tau is not None:
-            njoints = self._model.njoints - 2
-            for j in range(njoints):
-                joint = JointState()
-                joint.name = self._model.names[j + 2]
-                joint.position = q[7 + j]
-                joint.velocity = v[6 + j]
+        njoints = self._model.njoints - 2
+        for j in range(njoints):
+            joint = JointState()
+            joint.name = self._model.names[j + 2]
+            joint.position = q[7 + j]
+            joint.velocity = v[6 + j]
+            if tau is not None:
                 joint.effort = tau[j]
-                self._msg.joints.append(joint)
+            self._msg.joints.append(joint)
 
         return copy.deepcopy(self._msg)

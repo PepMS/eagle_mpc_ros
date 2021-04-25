@@ -50,6 +50,8 @@ class MpcController():
         self.mpcController.solver.solve(solver.xs[:self.mpcController.problem.T + 1],
                                         solver.us[:self.mpcController.problem.T])
 
+        self.mpcController.solver.convergence_init = 1e-3
+
         self.xs = []  # Real state trajectory
         self.us = []  # Real control trajectory
 
@@ -62,7 +64,7 @@ class MpcController():
             self.simulator = simulator.AerialSimulator(self.mpcController.robot_model,
                                                        self.mpcController.platform_params, self.simDt, solver.xs[0])
             time = 0
-            while time <= (self.nTraj + 100) * trajectoryDt:
+            while time <= (self.nTraj) * trajectoryDt + 1000:
                 self.mpcController.problem.x0 = self.simulator.states[-1]
                 self.mpcController.updateProblem(time)
                 self.mpcController.solver.solve(self.mpcController.solver.xs, self.mpcController.solver.us,
