@@ -3,10 +3,10 @@
   <arg name="namespace" default="trajectory_generation" />
 
   <arg name="mav_name" default="hexacopter370" />
-  <arg name="arm_name" default="flying_arm_3" />
-  <arg name="arm_enable" default="false" />
-
   <arg name="trajectory_name" default="hover" />
+  <arg name="arm_enable" default="false" />
+  <arg name="arm_name" default="flying_arm_3" />
+
   <arg name="trajectory_dt" default="20" />
   <arg name="trajectory_solver" default="SolverSbFDDP" />
   <arg name="launch_tools" default="true" />
