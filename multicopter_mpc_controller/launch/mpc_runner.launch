@@ -18,8 +18,9 @@
 
   <!-- Simulation environment-->
   <arg name="groundtruth" default="false" />
-  <arg name="rosbag" default="true" />
+  <arg name="rosbag" default="false" />
   <arg name="record_solver" default="false" />
+  <arg name="automatic_start" default="false"/>
 
   <!-- Disturbance configuration -->
   <arg name="disturbance_enable" default="false" />
@@ -36,7 +37,7 @@
   <arg name="mpc_config" value="$(arg mav_name)_mpc.yaml" unless="$(arg arm_enable)" />
   <arg name="mpc_config" value="$(arg mav_name)_$(arg arm_name)_mpc.yaml" if="$(arg arm_enable)" />
 
-  <arg name="bag_file" value="$(find multicopter_mpc_bag)/rosbags/$(arg trajectory_name).bag" />
+  <arg name="bag_file" default="$(find multicopter_mpc_bag)/rosbags/$(arg trajectory_name).bag" />
 
   <!-- SIMULATOR -->
   <include file="$(find multicopter_mpc_simulator)/launch/simulator.launch">
@@ -67,6 +68,7 @@
 
     <param name="use_internal_gains" value="$(arg use_internal_gains)" />
     <param name="record_solver" value="$(arg record_solver)" />
+    <param name="automatic_start" value="$(arg automatic_start)" />
     <param name="motor_command_dt" value="$(arg motor_command_dt)" if="$(arg use_internal_gains)" />
     <param name="arm_name" value="$(arg arm_name)" if="$(arg arm_enable)" />
 
@@ -103,6 +105,6 @@
 
 
   <!-- AUXILIARY NODES -->
-  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="$(arg mpc_type)_rqt_reconfigure" />
-  <!-- <node name="record_node" pkg="rosbag" type="record" args="record -o $(arg bag_file) -a" if="$(arg rosbag)"/> -->
+  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="$(arg mpc_type)_rqt_reconfigure" unless="$(arg automatic_start)"/>
+  <node name="record_node" pkg="rosbag" type="record" args="record -o $(arg bag_file) -a" if="$(arg rosbag)"/>
 </launch>

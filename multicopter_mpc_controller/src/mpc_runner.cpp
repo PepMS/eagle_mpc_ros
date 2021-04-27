@@ -12,8 +12,11 @@ MpcRunner::MpcRunner() {
   controller_started_ = false;
   initializePublishers();
   // RQT Config
-  callback_server_ = boost::bind(&MpcRunner::callbackConfig, this, _1, _2);
-  server_.setCallback(callback_server_);
+  if (!node_params_.automatic_start) {
+    callback_server_ = boost::bind(&MpcRunner::callbackConfig, this, _1, _2);
+    server_.setCallback(callback_server_);
+  }
+  node_params_.initialized_time = ros::Time::now();
 }
 
 MpcRunner::~MpcRunner() {}
@@ -38,6 +41,7 @@ void MpcRunner::initializeParameters() {
   nh_.param<std::string>(ros::this_node::getNamespace() + "/mpc_type", node_params_.mpc_type, "");
   nh_.param<bool>(ros::this_node::getNamespace() + "/use_internal_gains", node_params_.use_internal_gains, false);
   nh_.param<bool>(ros::this_node::getNamespace() + "/record_solver", node_params_.record_solver, false);
+  nh_.param<bool>(ros::this_node::getNamespace() + "/automatic_start", node_params_.automatic_start, false);
   nh_.param<std::string>(ros::this_node::getNamespace() + "/arm_name", node_params_.arm_name, "");
   node_params_.arm_enable = node_params_.arm_name != "";
 
@@ -112,6 +116,8 @@ void MpcRunner::initializeVariables() {
   flag_new_gains_ = false;
   fb_gains_ =
       Eigen::MatrixXd::Zero(mpc_controller_->get_actuation()->get_nu(), mpc_controller_->get_robot_state()->get_ndx());
+
+  node_params_.start_seconds = 10;
 }
 
 void MpcRunner::initializeMsgs() {
@@ -136,6 +142,10 @@ void MpcRunner::initializeSubscribers() {
   if (node_params_.arm_enable) {
     subs_joint_state_ =
         nh_.subscribe("/joint_states", 1, &MpcRunner::callbackJointState, this, ros::TransportHints().tcpNoDelay());
+  }
+
+  if (node_params_.automatic_start) {
+    timer_auto_start_ = nh_.createTimer(ros::Duration(1), &MpcRunner::callbackCountdown, this);
   }
 }
 
@@ -298,6 +308,16 @@ void MpcRunner::callbackMpcSolve(const ros::TimerEvent &) {
   //   flag_new_gains_ = true;
   //   mut_gains_.unlock();
   // }
+}
+
+void MpcRunner::callbackCountdown(const ros::TimerEvent &) {
+  node_params_.start_seconds -= 1;
+  ROS_WARN("Missinon Countdown: %ld", node_params_.start_seconds);
+  if (node_params_.start_seconds == 0) {
+    controller_started_ = true;
+    controller_start_time_ = ros::Time::now();
+    timer_auto_start_.stop();
+  }
 }
 
 void MpcRunner::callbackConfig(multicopter_mpc_controller::ParamsConfig &config, uint32_t level) {
