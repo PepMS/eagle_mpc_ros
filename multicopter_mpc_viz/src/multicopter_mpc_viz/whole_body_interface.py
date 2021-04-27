@@ -6,7 +6,6 @@ import copy
 
 class WholeBodyStateInterface():
     def __init__(self, model, platform_params, frame_id="world"):
-        print()
         self._model = model
         self._data = self._model.createData()
         self._platform_params = platform_params
