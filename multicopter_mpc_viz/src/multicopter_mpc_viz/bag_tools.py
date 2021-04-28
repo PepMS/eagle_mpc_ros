@@ -32,18 +32,24 @@ class MulticopterBag:
         m = re.search("(.+)__base_link", self.trajectory.platform_params.base_link_name)
         self.namespace = "/" + m.group(1) + "/"
 
+        self.states = []
+        self.states_t = []
         self.states_platform = []
         self.states_platform_t = []
         self.states_joints = []
         self.states_joints_t = []
 
+        self.controls = []
+        self.controls_t = []
         self.control_rotors = []
         self.control_rotors_t = []
         self.control_joints = []
         self.control_joints_t = []
 
+        self.disturbances = []
+        self.disturbances_t = []
+
         self.fill_controls()
-        self.find_t_ini()
         self.fill_states()
 
     def fill_states(self):
@@ -76,18 +82,12 @@ class MulticopterBag:
         for topic, msg, t in state_msgs:
             if msg.name[0].startswith("flying_arm"):
                 state = np.zeros(nj * 2)
-                control = np.zeros(nj)
                 for i in range(nj):
                     state[i] = msg.position[i]
                     state[i + nj] = msg.velocity[i]
-                    control[i] = msg.effort[i]
                 self.states_joints.append(state)
                 self.states_joints_t.append(msg.header.stamp.to_sec())
-                self.control_joints.append(control)
-                self.control_joints_t.append(msg.header.stamp.to_sec())
 
-        self.states = []
-        self.states_t = []
         for s, s_t in zip(self.states_platform, self.states_platform_t):
             if s_t >= self.t_ini:
                 nq = self.trajectory.state.nq
@@ -115,13 +115,61 @@ class MulticopterBag:
             self.control_rotors.append(control)
             self.control_rotors_t.append(msg.header.stamp.to_sec())
 
-    def find_t_ini(self):
-        if self.control_rotors:
-            for idx, control in enumerate(self.control_rotors):
-                c = np.linalg.norm(control)
-                if c > 1e-5:
-                    self.t_ini = self.control_rotors_t[idx]
-                    break
+        topic_name = self.namespace + "joint_states"
+        state_msgs = self.ros_bag.read_messages(topics=topic_name)
+
+        nj = self.robot_model.nq - 7
+        for topic, msg, t in state_msgs:
+            if msg.name[0].startswith("flying_arm"):
+                control = np.zeros(nj)
+                for i in range(nj):
+                    control[i] = msg.effort[i]
+                self.control_joints.append(control)
+                self.control_joints_t.append(msg.header.stamp.to_sec())
+
+        for idx, control in enumerate(self.control_rotors):
+            c = np.linalg.norm(control)
+            if c > 1e-1:
+                self.t_ini = self.control_rotors_t[idx]
+                break
+
+        for c, c_t in zip(self.control_rotors, self.control_rotors_t):
+            if c_t >= self.t_ini:
+                nu = self.trajectory.actuation.nu
+                nr = self.trajectory.platform_params.n_rotors
+                control = np.zeros(nu)
+                control[:nr] = c[:nr]
+                c_j_idx = bisect.bisect_right(self.control_joints_t, c_t)
+                c_j = self.control_joints[c_j_idx - 1]
+                control[nr:] = c_j[:]
+                self.controls.append(control)
+                self.controls_t.append(c_t - self.t_ini)
+
+    def fill_disturbances(self):
+        topic_name = self.namespace + "external_force"
+        dist_msgs = self.ros_bag.read_messages(topics=topic_name)
+
+        d_norm_last = 0
+        for topic, msg, t in dist_msgs:
+            time = msg.header.stamp.to_sec()
+            if time >= self.t_ini:
+                dist = np.zeros(3)
+                dist[0] = msg.wrench.force.x
+                dist[1] = msg.wrench.force.y
+                dist[2] = msg.wrench.force.z
+
+                d_norm = np.linalg.norm(dist)
+                if d_norm_last < 1e-1 and d_norm > 1e-1:
+                    self.dist_magnitude = d_norm
+                    self.dist_t_ini = time - self.t_ini
+
+                if d_norm_last > 1e-1 and d_norm < 1e-1:
+                    self.dist_t_end = time - self.t_ini
+                    self.dist_duration = self.dist_t_end - self.dist_t_ini
+                self.disturbances.append(dist)
+                self.disturbances_t.append(time - self.t_ini)
+
+                d_norm_last = d_norm
 
     # def problemReconstruction(self, mpc_main_path):
     #     self.mpc_main = multicopter_mpc.MpcMain(multicopter_mpc.MultiCopterType.Iris, self.mission_path, mpc_main_path)
