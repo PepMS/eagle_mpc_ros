@@ -12,10 +12,9 @@ MpcRunner::MpcRunner() {
   controller_started_ = false;
   initializePublishers();
   // RQT Config
-  if (!node_params_.automatic_start) {
-    callback_server_ = boost::bind(&MpcRunner::callbackConfig, this, _1, _2);
-    server_.setCallback(callback_server_);
-  }
+  server_ = boost::make_shared<dynamic_reconfigure::Server<multicopter_mpc_controller::ParamsConfig>>(server_mutex_);
+  callback_server_ = boost::bind(&MpcRunner::callbackConfig, this, _1, _2);
+  server_->setCallback(callback_server_);
   node_params_.initialized_time = ros::Time::now();
 }
 
@@ -314,9 +313,14 @@ void MpcRunner::callbackCountdown(const ros::TimerEvent &) {
   node_params_.start_seconds -= 1;
   ROS_WARN("Missinon Countdown: %ld", node_params_.start_seconds);
   if (node_params_.start_seconds == 0) {
+    multicopter_mpc_controller::ParamsConfig params;
+    params.start_mission = true;
+    boost::recursive_mutex::scoped_lock lock(server_mutex_);
+    server_->updateConfig(params);
+    lock.unlock();
+    timer_auto_start_.stop();
     controller_started_ = true;
     controller_start_time_ = ros::Time::now();
-    timer_auto_start_.stop();
   }
 }
 

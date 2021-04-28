@@ -65,9 +65,9 @@ class MpcRunner {
   ros::Timer timer_mpc_solve_;
   ros::Timer timer_auto_start_;
 
-  dynamic_reconfigure::Server<multicopter_mpc_controller::ParamsConfig> server_;
+  boost::shared_ptr<dynamic_reconfigure::Server<multicopter_mpc_controller::ParamsConfig>> server_;
   dynamic_reconfigure::Server<multicopter_mpc_controller::ParamsConfig>::CallbackType callback_server_;
-
+  boost::recursive_mutex server_mutex_;
   // Msgs
   mav_msgs::Actuators msg_thrusts_;
   multicopter_mpc_msgs::WholeBodyState msg_whole_body_state_;

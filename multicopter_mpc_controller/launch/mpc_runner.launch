@@ -21,12 +21,13 @@
   <arg name="rosbag" default="false" />
   <arg name="record_solver" default="false" />
   <arg name="automatic_start" default="false"/>
+  <arg name="rviz" default="true" />
 
   <!-- Disturbance configuration -->
   <arg name="disturbance_enable" default="false" />
   <arg name="disturbance_start" default="2" />
-  <arg name="disturbance_duration" default="2" />
-  <arg name="disturbance_force" default="6" />
+  <arg name="disturbance_duration" default="1" />
+  <arg name="disturbance_force" default="10" />
   <arg name="disturbance_direction" default="1 1 0" />
 
   <!-- PARAMETERS -->
@@ -99,7 +100,7 @@
     <arg name="launch_tools" value="false" />
   </include>
 
-  <include file="$(find multicopter_mpc_controller)/launch/rviz.launch">
+  <include file="$(find multicopter_mpc_controller)/launch/rviz.launch" if="$(arg rviz)">
     <arg name="mav_name" value="$(arg mav_name)" />
   </include>
 
