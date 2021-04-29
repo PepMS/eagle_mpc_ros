@@ -28,7 +28,7 @@ trajectory:
           weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 2, 2, 2]
+          weights: [1, 1, 1, 1, 1, 1, 4, 4, 4]
 
         - name: "translation_ee"
           type: "CostModelFrameTranslation"
@@ -97,6 +97,6 @@ trajectory:
           type: "CostModelFramePlacement"
           weight: 8000
           link_name: "hexacopter370__base_link"
-          position: [2, 0, 0.7]
+          position: [2.0, 0, 0.7]
           orientation: [0, 0, 0, 1] # x,y,z,w
 

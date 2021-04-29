@@ -150,6 +150,10 @@ class MulticopterBag:
         dist_msgs = self.ros_bag.read_messages(topics=topic_name)
 
         d_norm_last = 0
+        self.dist_magnitude = 0
+        self.dist_t_ini = 0
+        self.dist_t_end = 0
+        self.dist_duration = 0
         for topic, msg, t in dist_msgs:
             time = msg.header.stamp.to_sec()
             if time >= self.t_ini:
