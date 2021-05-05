@@ -49,6 +49,11 @@ class MulticopterBag:
         self.disturbances = []
         self.disturbances_t = []
 
+        self.solving_time = []
+        self.solving_cost = []
+        self.solving_iters = []
+        self.solving_time_t = []
+
         self.fill_controls()
         self.fill_states()
 
@@ -174,6 +179,17 @@ class MulticopterBag:
                 self.disturbances_t.append(time - self.t_ini)
 
                 d_norm_last = d_norm
+    
+    def fill_solver(self):
+        topic_name = "/solver_performance"
+        solver_msgs = self.ros_bag.read_messages(topics=topic_name)
+
+        for topic, msg, t in solver_msgs:
+            time = msg.header.stamp.to_sec()
+            self.solving_time.append(msg.solving_time.to_sec())
+            self.solving_cost.append(msg.final_cost)
+            self.solving_iters.append(msg.iters + 1)
+            self.solving_time_t.append(time)
 
     # def problemReconstruction(self, mpc_main_path):
     #     self.mpc_main = multicopter_mpc.MpcMain(multicopter_mpc.MultiCopterType.Iris, self.mission_path, mpc_main_path)
