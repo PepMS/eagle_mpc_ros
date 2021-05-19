@@ -489,7 +489,7 @@ void WholeBodyTrajectoryDisplay::processTrajectory() {
     placement_axes_.clear();
     for (std::size_t i = 0; i < wp_num; ++i) {
       boost::shared_ptr<rviz::Axes> axes;
-      axes.reset(new Axes(scene_manager_, scene_node_, 0.5, 0.02));
+      axes.reset(new Axes(scene_manager_, scene_node_, 0.25, 0.02));
 
       Ogre::Vector3 position;
       position.x = msg_->trajectory.placements[i].pose.position.x;
