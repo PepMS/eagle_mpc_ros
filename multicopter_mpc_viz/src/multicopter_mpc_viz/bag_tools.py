@@ -179,9 +179,9 @@ class MulticopterBag:
                 self.disturbances_t.append(time - self.t_ini)
 
                 d_norm_last = d_norm
-    
+
     def fill_solver(self):
-        topic_name = "/solver_performance"
+        topic_name = self.namespace + "solver_performance"
         solver_msgs = self.ros_bag.read_messages(topics=topic_name)
 
         for topic, msg, t in solver_msgs:
@@ -190,40 +190,3 @@ class MulticopterBag:
             self.solving_cost.append(msg.final_cost)
             self.solving_iters.append(msg.iters + 1)
             self.solving_time_t.append(time)
-
-    # def problemReconstruction(self, mpc_main_path):
-    #     self.mpc_main = multicopter_mpc.MpcMain(multicopter_mpc.MultiCopterType.Iris, self.mission_path, mpc_main_path)
-
-    #     for idx_iter, s_iter in enumerate(self.solver_iters):
-    #         self.mpc_main.setCurrentState(s_iter.state_initial)
-    #         self.mpc_main.runMpcStep(1)
-    #         control = np.copy(self.mpc_main.mpc_controller.getControls(0))
-    #         print(control)
-    #         print(self.controls[idx_iter])
-
-    # def fillSolverPerformanceIndicators(self):
-    #     solver_topic = "/mpc_controller/solver_performance"
-    #     solver_msgs = self.ros_bag.read_messages(topics=solver_topic)
-    #     for topic, msg, t in solver_msgs:
-    #         state = np.zeros(13)
-    #         solver_iter = SolverPerformanceIndicator()
-    #         state[0] = msg.state_initial.pose.position.x
-    #         state[1] = msg.state_initial.pose.position.y
-    #         state[2] = msg.state_initial.pose.position.z
-    #         state[3] = msg.state_initial.pose.orientation.x
-    #         state[4] = msg.state_initial.pose.orientation.y
-    #         state[5] = msg.state_initial.pose.orientation.z
-    #         state[6] = msg.state_initial.pose.orientation.w
-    #         state[7] = msg.state_initial.motion.linear.x
-    #         state[8] = msg.state_initial.motion.linear.y
-    #         state[9] = msg.state_initial.motion.linear.z
-    #         state[10] = msg.state_initial.motion.angular.x
-    #         state[11] = msg.state_initial.motion.angular.y
-    #         state[12] = msg.state_initial.motion.angular.z
-
-    #         solver_iter.state_initial = state
-    #         solver_iter.solving_time = msg.solving_time.secs + msg.solving_time.nsecs / 1e9
-    #         solver_iter.iters = msg.iters
-    #         solver_iter.final_cost = msg.final_cost
-    #         solver_iter.time = t.secs + t.nsecs / 1e9
-    #         self.solver_iters.append(solver_iter)

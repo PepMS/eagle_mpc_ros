@@ -1,115 +1,22 @@
 #!/usr/bin/env python3
-import os.path
-import sys
 
+import enum
 import rospy
 import rospkg
-import rosbag
-
 import tf
-
 import dynamic_reconfigure.client
 
+import numpy as np
+import pinocchio
+
+from multicopter_mpc_viz import MpcController
 from multicopter_mpc_viz import WholeBodyStatePublisher
 from multicopter_mpc_viz import WholeBodyTrajectoryPublisher
 
-import numpy as np
-
-import crocoddyl
-
-import multicopter_mpc
-from multicopter_mpc.utils import simulator
-
-
-class MpcController():
-    def __init__(self, trajectoryPath, trajectoryDt, trajectorySolver, mpcPath, mpcType, bagPath=None):
-        trajectory = multicopter_mpc.Trajectory()
-        trajectory.autoSetup(trajectoryPath)
-        squash = False
-        if trajectorySolver == 'SolverSbFDDP':
-            squash = True
-
-        problem = trajectory.createProblem(trajectoryDt, squash, "IntegratedActionModelEuler")
-
-        if trajectorySolver == 'SolverSbFDDP':
-            solver = multicopter_mpc.SolverSbFDDP(problem, trajectory.squash)
-        elif trajectorySolver == 'SolverBoxFDDP':
-            solver = crocoddyl.SolverBoxFDDP(problem)
-
-        solver.setCallbacks([crocoddyl.CallbackVerbose()])
-        solver.solve([], [], 100)
-        print("Final state: \n", solver.xs[-1])
-
-        if mpcType == 'Rail':
-            self.mpcController = multicopter_mpc.RailMpc(solver.xs, trajectoryDt, mpcPath)
-        elif mpcType == 'Weighted':
-            self.mpcController = multicopter_mpc.WeightedMpc(trajectory, trajectoryDt, mpcPath)
-        else:
-            self.mpcController = multicopter_mpc.CarrotMpc(trajectory, solver.xs, trajectoryDt, mpcPath)
-        self.mpcController.updateProblem(0)
-        self.mpcController.solver.solve(solver.xs[:self.mpcController.problem.T + 1],
-                                        solver.us[:self.mpcController.problem.T])
-
-        self.mpcController.solver.convergence_init = 1e-3
-
-        self.xs = []  # Real state trajectory
-        self.us = []  # Real control trajectory
-
-        self.xss = []
-        self.uss = []
-
-        if bagPath == "":
-            self.nTraj = len(solver.xs)
-            self.simDt = 2
-            self.simulator = simulator.AerialSimulator(self.mpcController.robot_model,
-                                                       self.mpcController.platform_params, self.simDt, solver.xs[0])
-            time = 0
-            while time <= (self.nTraj) * trajectoryDt + 1000:
-                self.mpcController.problem.x0 = self.simulator.states[-1]
-                self.mpcController.updateProblem(time)
-                self.mpcController.solver.solve(self.mpcController.solver.xs, self.mpcController.solver.us,
-                                                self.mpcController.iters)
-                control = np.copy(self.mpcController.solver.us_squash[0])
-                self.simulator.simulateStep(control)
-                self.xss.append(self.mpcController.solver.xs)
-                self.uss.append(self.mpcController.solver.us_squash)
-                time += self.simDt
-            self.xs = self.simulator.states
-            self.us = self.simulator.controls
-        else:
-            print()
-            #to do
-            # if os.path.exists(bagPath):
-            #     self.ros_bag = rosbag.Bag(bagPath)
-            # else:
-            #     sys.exit("Bag " + bagPath + " does not exists")
-            # solver_topic = "/solver_performace"
-            # solver_msgs = self.ros_bag.read_messages(topics=solver_topic)
-            # for topic, msg, t in solver_msgs:
-            #     state = np.zeros(13)
-            #     state[0] = msg.state_initial.pose.position.x
-            #     state[1] = msg.state_initial.pose.position.y
-            #     state[2] = msg.state_initial.pose.position.z
-            #     state[3] = msg.state_initial.pose.orientation.x
-            #     state[4] = msg.state_initial.pose.orientation.y
-            #     state[5] = msg.state_initial.pose.orientation.z
-            #     state[6] = msg.state_initial.pose.orientation.w
-            #     state[7] = msg.state_initial.motion.linear.x
-            #     state[8] = msg.state_initial.motion.linear.y
-            #     state[9] = msg.state_initial.motion.linear.z
-            #     state[10] = msg.state_initial.motion.angular.x
-            #     state[11] = msg.state_initial.motion.angular.y
-            #     state[12] = msg.state_initial.motion.angular.z
-
-            #     self.xs.append(state)
-            #     self.mpc_main.setCurrentState(state)
-            #     self.mpc_main.runMpcStep(0)
-            #     control = np.copy(self.mpc_main.mpc_controller.getControls(0))
-            #     self.us.append(control)
-            #     self.xss.append(self.mpc_main.mpc_controller.solver.xs)
-            #     self.uss.append(self.mpc_main.mpc_controller.solver.us)
-
-        self.xss.append(self.xss[-1])
+from sensor_msgs.msg import JointState
+from geometry_msgs.msg import Pose
+from mav_msgs.msg import Actuators
+from multicopter_mpc_msgs.msg import SolverPerformance
 
 
 class MpcControllerNode():
@@ -118,82 +25,146 @@ class MpcControllerNode():
 
         self.rate = rospy.Rate(500)
 
+        self.load_params()
+
+        self.mpcController = MpcController(self.trajectoryPath, self.trajectoryDt, self.trajectorySolver, self.mpcPath,
+                                           self.mpcType)
+        namespace = rospy.get_namespace()
+        with open(self.mpcController.mpcController.robot_model_path, "r") as urdf_file:
+            urdf_string = urdf_file.read()
+        rospy.set_param(namespace + "robot_description", urdf_string)
+
+        if self.bag_path == "":
+            self.mpcController.compute_mpc_trajectory()
+
+            self.xs = self.mpcController.xs
+            self.us = self.mpcController.us
+            self.us.append(self.us[-1])
+            self.idxTrj = 0
+
+            self.br = tf.TransformBroadcaster()
+            self.qs, self.vs, self.ts = [], [], []
+            nq = self.mpcController.mpcController.robot_model.nq
+            for x in self.xs:
+                self.qs.append(x[:nq])
+                self.vs.append(x[nq:])
+                self.ts.append(0.1)
+        else:
+            self.r_model = self.mpcController.mpcController.robot_model
+            self.r_data = self.r_model.createData()
+            self.q = np.zeros(self.r_model.nq)
+            self.v = np.zeros(self.r_model.nv)
+            self.thrusts = np.zeros(self.mpcController.mpcController.platform_params.n_rotors)
+            self.initial_state = np.zeros(self.r_model.nq + self.r_model.nv)
+
+        self.set_publishers_subscribers()
+
+    def load_params(self):
         rospack = rospkg.RosPack()
+
+        self.bag_path = rospy.get_param(rospy.get_namespace() + "/bag_path", "")
 
         self.trajectoryPath = rospy.get_param(
             rospy.get_namespace() + "/trajectory_path",
             rospack.get_path('multicopter_mpc_yaml') + '/trajectories/quad_hover.yaml')
         self.mpcPath = rospy.get_param(rospy.get_namespace() + "/mpc_path",
                                        rospack.get_path('multicopter_mpc_yaml') + '/mpc/mpc.yaml')
-        self.bagPath = rospy.get_param(rospy.get_namespace() + "/bag_path", "")
         self.trajectoryDt = rospy.get_param(rospy.get_namespace() + "/trajectory_dt", 10)
         self.trajectorySolver = rospy.get_param(rospy.get_namespace() + "/trajectory_solver", "SolverSbFDDP")
         self.mpcType = rospy.get_param(rospy.get_namespace() + "/mpc_type", "carrot")
-        self.mpcController = MpcController(self.trajectoryPath, self.trajectoryDt, self.trajectorySolver, self.mpcPath,
-                                           self.mpcType, self.bagPath)
+        self.horizon_enabled = rospy.get_param(rospy.get_namespace() + "/horizon_enable", False)
 
-        namespace = rospy.get_namespace()
-        with open(self.mpcController.mpcController.robot_model_path, "r") as urdf_file:
-            urdf_string = urdf_file.read()
-        rospy.set_param(namespace + "robot_description", urdf_string)
-
-        self.xs = self.mpcController.xs
-        self.us = self.mpcController.us
-        self.us.append(self.us[-1])
-
-        self.qs, self.vs, self.ts = [], [], []
-        nq = self.mpcController.mpcController.robot_model.nq
-        for x in self.xs:
-            self.qs.append(x[:nq])
-            self.vs.append(x[nq:])
-            self.ts.append(0.1)
-
+    def set_publishers_subscribers(self):
         self.statePub = WholeBodyStatePublisher('whole_body_state',
                                                 self.mpcController.mpcController.robot_model,
                                                 self.mpcController.mpcController.platform_params,
                                                 frame_id="world")
-        self.trajectoryPub = WholeBodyTrajectoryPublisher('whole_body_trajectory',
-                                                          self.mpcController.mpcController.robot_model,
-                                                          self.mpcController.mpcController.platform_params,
-                                                          frame_id="world")
-        self.partialTrajectoryPub = WholeBodyTrajectoryPublisher('whole_body_partial_trajectory',
-                                                                 self.mpcController.mpcController.robot_model,
-                                                                 self.mpcController.mpcController.platform_params,
-                                                                 frame_id="world")
 
-        self.dynRecClient = dynamic_reconfigure.client.Client(
-            "/" + rospy.get_param(rospy.get_namespace() + "/dynamic_reconfigure_client"),
-            config_callback=self.callbackTrajectoryIdx)
-
-        self.trajectoryTimer = rospy.Timer(rospy.Duration(2), self.callbackTrajectoryTimer)
-        self.stateTimer = rospy.Timer(rospy.Duration(0.002), self.callbackStateTimer)
-
-        self.idxTrj = 0
-
-        self.br = tf.TransformBroadcaster()
+        if self.bag_path == "":
+            self.trajectoryPub = WholeBodyTrajectoryPublisher('whole_body_trajectory',
+                                                              self.mpcController.mpcController.robot_model,
+                                                              self.mpcController.mpcController.platform_params,
+                                                              frame_id="world")
+            self.trajectoryTimer = rospy.Timer(rospy.Duration(2), self.callbackTrajectoryTimer)
+            self.dynRecClient = dynamic_reconfigure.client.Client(
+                "/" + rospy.get_param(rospy.get_namespace() + "/dynamic_reconfigure_client"),
+                config_callback=self.callbackTrajectoryIdx)
+            self.stateTimer = rospy.Timer(rospy.Duration(0.002), self.callbackStateTimer)
+        else:
+            self.ground_truth_sub = rospy.Subscriber("/hexacopter370/ground_truth/pose", Pose,
+                                                     self.callback_ground_truth)
+            self.joint_state_sub = rospy.Subscriber("/hexacopter370/joint_states", JointState,
+                                                    self.callback_joint_states)
+            self.joint_state_sub = rospy.Subscriber("/hexacopter370/motor_speed", Actuators, self.callback_actuators)
+        if self.horizon_enabled:
+            self.partialTrajectoryPub = WholeBodyTrajectoryPublisher('whole_body_partial_trajectory',
+                                                                     self.mpcController.mpcController.robot_model,
+                                                                     self.mpcController.mpcController.platform_params,
+                                                                     frame_id="world")
+            if self.bag_path != "":
+                self.solver_performance_sub = rospy.Subscriber("/hexacopter370/solver_performance", SolverPerformance,
+                                                               self.callback_solver_performance)
 
     def callbackTrajectoryTimer(self, timer):
-        # print()
-        # print("here 1")
         self.trajectoryPub.publish(self.ts, self.qs, self.vs)
-        # print("here 2")
 
     def callbackStateTimer(self, timer):
         x = self.xs[self.idxTrj]
         nq = self.mpcController.mpcController.robot_model.nq
-        # print("here 2", self.idxTrj)
         nRotors = self.mpcController.mpcController.platform_params.n_rotors
         self.statePub.publish(0.123, x[:nq], x[nq:], self.us[self.idxTrj][:nRotors], self.us[self.idxTrj][nRotors:])
+
         qs, vs, ts = [], [], []
         for x in self.mpcController.xss[self.idxTrj]:
             qs.append(x[:nq])
             vs.append(x[nq:])
             ts.append(0.1)
-        self.partialTrajectoryPub.publish(ts[0::2], qs[0::2], vs[0::2])
+        if self.horizon_enabled:
+            self.partialTrajectoryPub.publish(ts[0::2], qs[0::2], vs[0::2])
 
     def callbackTrajectoryIdx(self, config):
         self.trajectory_percentage = config.trajectory_percentage
         self.idxTrj = int((len(self.xs) - 1) * self.trajectory_percentage / 100)
+
+    def callback_ground_truth(self, data):
+        self.q[0] = data.position.x
+        self.q[1] = data.position.y
+        self.q[2] = data.position.z
+        self.q[3] = data.orientation.x
+        self.q[4] = data.orientation.y
+        self.q[5] = data.orientation.z
+        self.q[6] = data.orientation.w
+
+        pinocchio.forwardKinematics(self.r_model, self.r_data, self.q)
+        pinocchio.updateFramePlacement(self.r_model, self.r_data, self.r_model.getFrameId("flying_arm_3__gripper"))
+
+        Mball = self.r_data.oMf[self.r_model.getFrameId("flying_arm_3__gripper")]
+
+        self.statePub.publish(0.123, self.q, self.v, self.thrusts, np.zeros(3))
+        # self.state_pub2.publish(0.123, self.q2, self.v2, np.zeros(6), np.array([]))
+
+    def callback_joint_states(self, data):
+        if "flying_arm_3" in data.name[0] and hasattr(data, "position"):
+            for i in range(len(data.position)):
+                self.q[7 + i] = data.position[i]
+
+    def callback_solver_performance(self, data):
+        qs, vs, ts = [], [], []
+        for msg_floating in data.floating_base_trajectory:
+            q = np.zeros(self.r_model.nq)
+            v = np.zeros(self.r_model.nv)
+            q[6] = 1
+            q[0] = msg_floating.pose.position.x
+            q[1] = msg_floating.pose.position.y
+            q[2] = msg_floating.pose.position.z
+            qs.append(q)
+            vs.append(v)
+            ts.append(0.1)
+        self.partialTrajectoryPub.publish(ts[0::2], qs[0::2], vs[0::2])
+
+    def callback_actuators(self, data):
+        for idx, ang_speed in enumerate(data.angular_velocities):
+            self.thrusts[idx] = ang_speed**2 * self.mpcController.mpcController.platform_params.cf
 
 
 if __name__ == '__main__':
