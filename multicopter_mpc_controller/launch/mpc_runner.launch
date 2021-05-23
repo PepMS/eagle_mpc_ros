@@ -20,7 +20,7 @@
   <arg name="groundtruth" default="false" />
   <arg name="rosbag" default="false" />
   <arg name="record_solver" default="false" />
-  <arg name="automatic_start" default="false"/>
+  <arg name="automatic_start" default="false" />
   <arg name="rviz" default="true" />
 
   <!-- Disturbance configuration -->
@@ -81,6 +81,7 @@
       <remap from="/joint_command_1" to="/$(arg mav_name)/joint1_effort_controller/command" if="$(arg arm_enable)" />
       <remap from="/joint_command_2" to="/$(arg mav_name)/joint2_effort_controller/command" if="$(arg arm_enable)" />
       <remap from="/joint_command_3" to="/$(arg mav_name)/joint3_effort_controller/command" if="$(arg arm_enable)" />
+      <remap from="/solver_performance" to="/$(arg mav_name)/solver_performance" if="$(arg record_solver)" />
     </node>
 
     <group if="$(arg disturbance_enable)">
@@ -104,8 +105,11 @@
     <arg name="mav_name" value="$(arg mav_name)" />
   </include>
 
-
+  <arg name="bag_topics" default="/$(arg mav_name)/ground_truth/odometry /$(arg mav_name)/ground_truth/pose /$(arg mav_name)/joint_states /$(arg mav_name)/motor_speed /tf /tf_static /clock" />
   <!-- AUXILIARY NODES -->
-  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="$(arg mpc_type)_rqt_reconfigure" unless="$(arg automatic_start)"/>
-  <node name="record_node" pkg="rosbag" type="record" args="record -o $(arg bag_file) -a" if="$(arg rosbag)"/>
+  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="$(arg mpc_type)_rqt_reconfigure" unless="$(arg automatic_start)" />
+  <group if="$(arg rosbag)">
+    <node name="record_node" pkg="rosbag" type="record" args="record -o $(arg bag_file) $(arg bag_topics) /$(arg mav_name)/solver_performance" if="$(arg record_solver)" />
+    <node name="record_node" pkg="rosbag" type="record" args="record -o $(arg bag_file) $(arg bag_topics)" unless="$(arg record_solver)" />
+  </group>
 </launch>
