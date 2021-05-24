@@ -20,6 +20,7 @@
   <arg name="groundtruth" default="false" />
   <arg name="rosbag" default="false" />
   <arg name="record_solver" default="false" />
+  <arg name="record_solver_level" default="0"/>
   <arg name="automatic_start" default="false" />
   <arg name="rviz" default="true" />
 
@@ -69,6 +70,7 @@
 
     <param name="use_internal_gains" value="$(arg use_internal_gains)" />
     <param name="record_solver" value="$(arg record_solver)" />
+    <param name="record_solver_level" value="$(arg record_solver_level)" />
     <param name="automatic_start" value="$(arg automatic_start)" />
     <param name="motor_command_dt" value="$(arg motor_command_dt)" if="$(arg use_internal_gains)" />
     <param name="arm_name" value="$(arg arm_name)" if="$(arg arm_enable)" />

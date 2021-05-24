@@ -57,7 +57,6 @@ class MpcRunner {
   ros::Subscriber subs_joint_state_;
 
   ros::Publisher pub_thrust_command_;
-  ros::Publisher pub_whole_body_state_;
   ros::Publisher pub_solver_performance_;
   std::vector<ros::Publisher> pub_arm_commands_;
   ros::Publisher pub_arm_command_;
@@ -70,7 +69,6 @@ class MpcRunner {
   boost::recursive_mutex server_mutex_;
   // Msgs
   mav_msgs::Actuators msg_thrusts_;
-  multicopter_mpc_msgs::WholeBodyState msg_whole_body_state_;
   multicopter_mpc_msgs::SolverPerformance msg_solver_performance_;
   multicopter_mpc_msgs::MotorsState msg_motors_state_;
   std_msgs::Float64 msg_joint_command_;
@@ -96,6 +94,7 @@ class MpcRunner {
 
     bool use_internal_gains;
     bool record_solver;
+    std::size_t record_solver_level;
     bool automatic_start;
     std::size_t start_seconds;
     ros::Time initialized_time;
