@@ -78,7 +78,7 @@ trajectory:
           angular: [0, 0, 0]
 
     - name: "grasp"
-      duration: 200 #ms
+      duration: 250 #ms
       costs:
         - name: "state_reg"
           type: "CostModelState"
