@@ -6,7 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /TrajectoryGenerated1
         - /TrajectoryGenerated1/Robot1
         - /TrajectoryGenerated1/Center of Mass1
         - /TrajectoryState1/Thrusts1
@@ -16,6 +15,8 @@ Panels:
         - /ControllerState1/Thrusts1
         - /HorizonTrajectory1/Robot1
         - /HorizonTrajectory1/Center of Mass1
+        - /WholeBodyState1
+        - /WholeBodyState1/Robot1
       Splitter Ratio: 0.5
     Tree Height: 719
   - Class: rviz/Selection
@@ -380,6 +381,38 @@ Visualization Manager:
       Topic: /mpc_controller/whole_body_partial_trajectory
       Unreliable: false
       Value: true
+    - Class: multicopter_mpc_rviz_plugins/WholeBodyState
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        sphere:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Name: WholeBodyState
+      Queue Size: 10
+      Robot:
+        Enable: true
+        Robot Alpha: 1
+        Robot Collision: false
+        Robot Description: payload_description
+        Robot Visual: true
+      Thrusts:
+        Alpha: 1
+        Color: 85; 0; 255
+        Enable: false
+        Head Length: 0.07999999821186066
+        Head Radius: 0.029999999329447746
+        Shaft Length: 0.800000011920929
+        Shaft Radius: 0.009999999776482582
+      Topic: /mpc_controller/payload_state
+      Unreliable: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 211; 215; 207
@@ -408,7 +441,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 9.010075569152832
+      Distance: 6.584102630615234
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -424,9 +457,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4253985285758972
+      Pitch: 0.08539866656064987
       Target Frame: <Fixed Frame>
-      Yaw: 0.7703981995582581
+      Yaw: 0.9753980040550232
     Saved:
       - Class: rviz/Orbit
         Distance: 3.9003522396087646

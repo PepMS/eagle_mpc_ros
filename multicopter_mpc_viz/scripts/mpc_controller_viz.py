@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
-import enum
 import rospy
 import rospkg
+from rospy import exceptions
+from rospy.rostime import Duration
 import tf
 import dynamic_reconfigure.client
 
 import numpy as np
 import pinocchio
+import example_robot_data
 
 from multicopter_mpc_viz import MpcController
 from multicopter_mpc_viz import WholeBodyStatePublisher
@@ -32,7 +34,14 @@ class MpcControllerNode():
         namespace = rospy.get_namespace()
         with open(self.mpcController.mpcController.robot_model_path, "r") as urdf_file:
             urdf_string = urdf_file.read()
-        rospy.set_param(namespace + "robot_description", urdf_string)
+        rospy.set_param(namespace + "uam_description", urdf_string)
+
+        if self.payload_enabled:
+            rospack = rospkg.RosPack()
+
+            with open(rospack.get_path('multicopter_mpc_viz') + '/description/payload.urdf', "r") as urdf_file:
+                urdf_string = urdf_file.read()
+            rospy.set_param(namespace + "payload_description", urdf_string)
 
         if self.bag_path == "":
             self.mpcController.compute_mpc_trajectory()
@@ -73,8 +82,15 @@ class MpcControllerNode():
         self.trajectorySolver = rospy.get_param(rospy.get_namespace() + "/trajectory_solver", "SolverSbFDDP")
         self.mpcType = rospy.get_param(rospy.get_namespace() + "/mpc_type", "carrot")
         self.horizon_enabled = rospy.get_param(rospy.get_namespace() + "/horizon_enable", False)
+        self.payload_enabled = rospy.get_param(rospy.get_namespace() + "/payload_enable", False)
+        if self.payload_enabled:
+            self.payload_rest_pos = np.array([5.00, 0, 0])
+            self.payload_direction = rospy.get_param(rospy.get_namespace() + "/payload_direction", 0)
+            self.payload_pp_time = rospy.get_param(rospy.get_namespace() + "/payload_pp_time", 1.0)
 
     def set_publishers_subscribers(self):
+        self.time_first_state = None
+
         self.statePub = WholeBodyStatePublisher('whole_body_state',
                                                 self.mpcController.mpcController.robot_model,
                                                 self.mpcController.mpcController.platform_params,
@@ -96,6 +112,7 @@ class MpcControllerNode():
             self.joint_state_sub = rospy.Subscriber("/hexacopter370/joint_states", JointState,
                                                     self.callback_joint_states)
             self.joint_state_sub = rospy.Subscriber("/hexacopter370/motor_speed", Actuators, self.callback_actuators)
+
         if self.horizon_enabled:
             self.partialTrajectoryPub = WholeBodyTrajectoryPublisher('whole_body_partial_trajectory',
                                                                      self.mpcController.mpcController.robot_model,
@@ -104,6 +121,14 @@ class MpcControllerNode():
             if self.bag_path != "":
                 self.solver_performance_sub = rospy.Subscriber("/hexacopter370/solver_performance", SolverPerformance,
                                                                self.callback_solver_performance)
+
+        if self.payload_enabled:
+            payload = example_robot_data.load("hexacopter370")
+            self.payload_model = payload.model
+            self.payload_pos_pub = WholeBodyStatePublisher('payload_state',
+                                                           self.payload_model,
+                                                           self.mpcController.mpcController.platform_params,
+                                                           frame_id="world")
 
     def callbackTrajectoryTimer(self, timer):
         self.trajectoryPub.publish(self.ts, self.qs, self.vs)
@@ -127,6 +152,9 @@ class MpcControllerNode():
         self.idxTrj = int((len(self.xs) - 1) * self.trajectory_percentage / 100)
 
     def callback_ground_truth(self, data):
+        if self.time_first_state is None:
+            self.time_first_state = rospy.get_rostime()
+
         self.q[0] = data.position.x
         self.q[1] = data.position.y
         self.q[2] = data.position.z
@@ -135,13 +163,36 @@ class MpcControllerNode():
         self.q[5] = data.orientation.z
         self.q[6] = data.orientation.w
 
-        pinocchio.forwardKinematics(self.r_model, self.r_data, self.q)
-        pinocchio.updateFramePlacement(self.r_model, self.r_data, self.r_model.getFrameId("flying_arm_3__gripper"))
-
-        Mball = self.r_data.oMf[self.r_model.getFrameId("flying_arm_3__gripper")]
-
         self.statePub.publish(0.123, self.q, self.v, self.thrusts, np.zeros(3))
-        # self.state_pub2.publish(0.123, self.q2, self.v2, np.zeros(6), np.array([]))
+
+        if self.payload_enabled:
+            try:
+                pinocchio.forwardKinematics(self.r_model, self.r_data, self.q)
+                pinocchio.updateFramePlacement(self.r_model, self.r_data,
+                                               self.r_model.getFrameId("flying_arm_3__gripper"))
+
+                M_payload = self.r_data.oMf[self.r_model.getFrameId("flying_arm_3__gripper")]
+
+                self.q_pay = np.zeros(self.payload_model.nq)
+                self.q_pay[:3] = self.payload_rest_pos
+                self.q_pay[6] = 1
+
+                duration_started = rospy.get_rostime().to_sec() - self.time_first_state.to_sec()
+                if duration_started > self.payload_pp_time and self.payload_direction == 1:
+                    self.q_pay[0] = M_payload.translation[0]
+                    self.q_pay[1] = M_payload.translation[1]
+                    self.q_pay[2] = M_payload.translation[2]
+
+                if duration_started < self.payload_pp_time and self.payload_direction == 0:
+                    self.q_pay[0] = M_payload.translation[0]
+                    self.q_pay[1] = M_payload.translation[1]
+                    self.q_pay[2] = M_payload.translation[2]
+
+                self.payload_pos_pub.publish(0.123, self.q_pay, np.zeros(self.payload_model.nv),
+                                             np.zeros(self.mpcController.mpcController.platform_params.n_rotors),
+                                             np.array([]))
+            except AttributeError:
+                print("Payload publisher not created yet")
 
     def callback_joint_states(self, data):
         if "flying_arm_3" in data.name[0] and hasattr(data, "position"):

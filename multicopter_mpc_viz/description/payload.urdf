@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<robot name="payload">
+  <link name="sphere">
+    <!-- <visual>
+      <origin rpy="0 0 1.54" xyz="0 0 -0.05" />
+      <geometry>
+        <mesh filename="package://multicopter_mpc_viz/launch/hamster-father-fmd.dae" scale="0.001 0.001 0.001" />
+      </geometry>
+      <material name="">
+        <color rgba="0.8471 0.6078 0.3412 1" />
+      </material>
+    </visual> -->
+    <visual>
+      <geometry>
+        <sphere radius="0.025"/>
+      </geometry>
+      <material name="yellow">
+            <color rgba="0.8902 0.8627 0.0980 1"/>
+      </material>
+    </visual>
+  </link>
+</robot>
