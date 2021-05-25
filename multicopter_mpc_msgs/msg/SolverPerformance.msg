@@ -1,7 +1,11 @@
- Header header
+Header header
 
- duration solving_time
- uint64 iters
- float64 final_cost
+duration solving_time
+uint64 iters
+float64 final_cost
+duration initial_time
 
-multicopter_mpc_msgs/FloatingBaseState state_initial
+multicopter_mpc_msgs/FloatingBaseState floating_base_initial
+multicopter_mpc_msgs/JointState[] joints_initial
+
+multicopter_mpc_msgs/FloatingBaseState[] floating_base_trajectory
