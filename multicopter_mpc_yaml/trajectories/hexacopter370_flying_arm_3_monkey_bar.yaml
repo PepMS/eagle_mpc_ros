@@ -67,7 +67,7 @@ trajectory:
 
         - name: "control_reg"
           type: "CostModelControl"
-          weight: 1e-1
+          weight: 1e-3
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1, 1, 1, 1]
@@ -95,8 +95,7 @@ trajectory:
 
         - name: "placement_base_link"
           type: "CostModelFramePlacement"
-          weight: 8000
+          weight: 7500
           link_name: "hexacopter370__base_link"
           position: [2.0, 0, 0.7]
           orientation: [0, 0, 0, 1] # x,y,z,w
-
