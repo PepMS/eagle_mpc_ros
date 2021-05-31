@@ -11,7 +11,7 @@ trajectory:
       costs:
         - name: "state_reg"
           type: "CostModelState"
-          weight: 1e-1
+          weight: 1e-3
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights:
@@ -29,17 +29,24 @@ trajectory:
 
         - name: "control_reg"
           type: "CostModelControl"
-          weight: 1e-2
+          weight: 1e-1
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
+          weights: [1, 1, 1, 1, 1, 1, 0.01, 0.01, 0.01]
+
+        - name: "state_arm"
+          type: "CostModelState"
+          weight: 100
+          reference: [0, 0, 0, 0, 0, 0, 1, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          activation: "ActivationModelWeightedQuad"
+          weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
 
     - name: "take_off_hover"
       duration: 0 #ms
       costs:
         - name: "state_reg"
           type: "CostModelState"
-          weight: 1e-1
+          weight: 1e-3
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights:
@@ -50,7 +57,7 @@ trajectory:
           weight: 1e-2
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
+          weights: [1, 1, 1, 1, 1, 1, 0.01, 0.01, 0.01]
           
         - name: "state_limits"
           type: "CostModelState"
@@ -67,7 +74,7 @@ trajectory:
           weight: 2000
           link_name: "hexacopter370__base_link"
           orientation: [0, 0, 0, 1] # x,y,z,w
-          position: [0, 0, 1.5]
+          position: [0, 0, 1]
 
         - name: "motion_base_link"
           type: "CostModelFrameVelocity"
@@ -77,12 +84,12 @@ trajectory:
           angular: [0, 0, 0]
 
     - name: "approach"
-      duration: 1500 #ms
+      duration: 1400 #ms
       transition: true
       costs:
         - name: "state_reg"
           type: "CostModelState"
-          weight: 1e-1
+          weight: 1e-3
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights:
@@ -103,14 +110,14 @@ trajectory:
           weight: 1e-2
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
+          weights: [1, 1, 1, 1, 1, 1, 0.01, 0.01, 0.01]
 
     - name: "pre_grasp"
       duration: 0 #ms
       costs:
         - name: "state_reg"
           type: "CostModelState"
-          weight: 1e-1
+          weight: 1e-3
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights:
@@ -131,7 +138,7 @@ trajectory:
           weight: 1e-2
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
+          weights: [1, 1, 1, 1, 1, 1, 0.01, 0.01, 0.01]
 
         - name: "translation_ee"
           type: "CostModelFrameTranslation"
@@ -143,15 +150,17 @@ trajectory:
           type: "CostModelFrameVelocity"
           weight: 1000
           link_name: "flying_arm_3__gripper"
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 0, 0, 0]
           linear: [0, 0, 0]
           angular: [0, 0, 0]
 
     - name: "grasp"
-      duration: 400 #ms
+      duration: 100 #ms
       costs:
         - name: "state_reg"
           type: "CostModelState"
-          weight: 1e-1
+          weight: 1e-3
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights:
@@ -172,7 +181,7 @@ trajectory:
           weight: 1e-2
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
+          weights: [1, 1, 1, 1, 1, 1, 0.01, 0.01, 0.01]
 
         - name: "translation_ee"
           type: "CostModelFrameTranslation"
@@ -184,17 +193,19 @@ trajectory:
           type: "CostModelFrameVelocity"
           weight: 1000
           link_name: "flying_arm_3__gripper"
+          activation: "ActivationModelWeightedQuad"
+          weights: [1, 1, 1, 0, 0, 0]
           linear: [0, 0, 0]
           angular: [0, 0, 0]
 
     - name: "move_away"
-      duration: 1500 #ms
+      duration: 1600 #ms
       transition: true
       costs:
 
         - name: "state_reg"
           type: "CostModelState"
-          weight: 1e-1
+          weight: 1e-3
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights:
@@ -215,14 +226,14 @@ trajectory:
           weight: 1e-2
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
+          weights: [1, 1, 1, 1, 1, 1, 0.01, 0.01, 0.01]
 
     - name: "hover"
       duration: 0 #ms
       costs:
         - name: "state_reg"
           type: "CostModelState"
-          weight: 1e-1
+          weight: 1e-3
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights:
@@ -243,7 +254,7 @@ trajectory:
           weight: 1e-2
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
+          weights: [1, 1, 1, 1, 1, 1, 0.01, 0.01, 0.01]
 
         - name: "placement_base_link"
           type: "CostModelFramePlacement"
