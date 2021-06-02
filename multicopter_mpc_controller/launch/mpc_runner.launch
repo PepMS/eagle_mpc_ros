@@ -107,7 +107,7 @@
     <arg name="mav_name" value="$(arg mav_name)" />
   </include>
 
-  <arg name="bag_topics" default="/$(arg mav_name)/ground_truth/odometry /$(arg mav_name)/ground_truth/pose /$(arg mav_name)/joint_states /$(arg mav_name)/motor_speed /tf /tf_static /clock" />
+  <arg name="bag_topics" default="/$(arg mav_name)/ground_truth/odometry /$(arg mav_name)/ground_truth/pose /$(arg mav_name)/joint_states /$(arg mav_name)/motor_speed /tf /tf_static /clock /$(arg mav_name)/external_force" />
   <!-- AUXILIARY NODES -->
   <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="$(arg mpc_type)_rqt_reconfigure" unless="$(arg automatic_start)" />
   <group if="$(arg rosbag)">
