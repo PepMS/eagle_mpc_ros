@@ -124,7 +124,7 @@ trajectory:
 
         - name: "friction_cone"
           type: "CostModelContactFrictionCone"
-          weight: 100 # working with 10
+          weight: 1000 # working with 10
           n_surf: [0, 0, 1]
           mu: 0.7
           link_name: "flying_arm_3__gripper"

@@ -20,7 +20,7 @@ Panels:
         - /WholeBodyState1
         - /WholeBodyState1/Robot1
       Splitter Ratio: 0.5
-    Tree Height: 719
+    Tree Height: 363
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -443,7 +443,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 3.409118175506592
+      Distance: 8.418017387390137
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -451,17 +451,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 4.0603742599487305
-        Y: 1.9356133937835693
-        Z: -0.1698979139328003
+        X: 4.808452129364014
+        Y: 2.148083209991455
+        Z: 1.1205428838729858
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.26539817452430725
+      Pitch: 0.02039816603064537
       Target Frame: <Fixed Frame>
-      Yaw: 5.143560886383057
+      Yaw: 4.708554744720459
     Saved:
       - Class: rviz/Orbit
         Distance: 3.9003522396087646
@@ -523,6 +523,26 @@ Visualization Manager:
         Pitch: 0.26539817452430725
         Target Frame: <Fixed Frame>
         Yaw: 5.143560886383057
+      - Class: rviz/Orbit
+        Distance: 8.418017387390137
+        Enable Stereo Rendering:
+          Stereo Eye Separation: 0.05999999865889549
+          Stereo Focal Distance: 1
+          Swap Stereo Eyes: false
+          Value: false
+        Field of View: 0.7853981852531433
+        Focal Point:
+          X: 4.808452129364014
+          Y: 2.148083209991455
+          Z: 1.1205428838729858
+        Focal Shape Fixed Size: false
+        Focal Shape Size: 0.05000000074505806
+        Invert Z Axis: false
+        Name: eagle_catch_general
+        Near Clip Distance: 0.009999999776482582
+        Pitch: 0.02039816603064537
+        Target Frame: <Fixed Frame>
+        Yaw: 4.708554744720459
 Window Geometry:
   Displays:
     collapsed: true
@@ -539,5 +559,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1876
-  X: 44
+  X: 1964
   Y: 27

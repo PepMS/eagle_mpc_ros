@@ -25,7 +25,7 @@ mpc_controller:
   rail_activation_weights: [80, 80, 80, 1, 1, 1, 80, 80, 80, 1, 1, 1, 1, 1, 1, 1, 1, 1]
   rail_control_weight: 1e-2
 
-  weighted_alpha: 2.0
-  weighted_beta: 0.001
+  weighted_alpha: 3.0
+  weighted_beta: 0.01
   weighted_state_reg: 1e-1
   weighted_control_reg: 1e-2

@@ -8,7 +8,7 @@
   <arg name="bag_name" default="" />
   <arg name="bag_player" default="false" />
   <arg name="bag_speed" default="1" unless="$(arg horizon_enable)" />
-  <arg name="bag_speed" default="0.3" if="$(arg horizon_enable)" />
+  <arg name="bag_speed" default="0.2" if="$(arg horizon_enable)" />
   <arg name="payload_enable" default="false" />
   <!-- 0: load -> no load, 1: no load -> load -->
   <arg name="payload_direction" default="0" />
@@ -60,7 +60,7 @@
 
   <group if=" $(arg bag_enable)">
     <param name="use_sim_time" value="true" />
-    <node pkg="rosbag" type="play" name="player" output="screen" args="$(arg bag_name) -l -r $(arg bag_speed) -s 9" if="$(arg bag_player)" />
+    <node pkg="rosbag" type="play" name="player" output="screen" args="$(arg bag_name) -l -r $(arg bag_speed) -s 7" if="$(arg bag_player)" />
   </group>
 
 </launch>
