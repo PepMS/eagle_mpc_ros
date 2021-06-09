@@ -8,7 +8,7 @@
   <arg name="bag_name" default="" />
   <arg name="bag_player" default="false" />
   <arg name="bag_speed" default="1" unless="$(arg horizon_enable)" />
-  <arg name="bag_speed" default="0.2" if="$(arg horizon_enable)" />
+  <arg name="bag_speed" default="0.1" if="$(arg horizon_enable)" />
   <arg name="payload_enable" default="false" />
   <!-- 0: load -> no load, 1: no load -> load -->
   <arg name="payload_direction" default="0" />
