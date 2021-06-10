@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2020, University of Edinburgh, Istituto Italiano di Tecnologia
-// Copyright note valid unless otherwise stated in individual files.
+// Copyright (C) 2020-2021, University of Edinburgh, Istituto Italiano di Tecnologia
+// Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 

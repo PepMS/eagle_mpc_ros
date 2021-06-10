@@ -1,3 +1,9 @@
+############################################################################## 
+# BSD 3-Clause License
+# Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+# All rights reserved. 
+##############################################################################
+
 import numpy as np
 
 import crocoddyl

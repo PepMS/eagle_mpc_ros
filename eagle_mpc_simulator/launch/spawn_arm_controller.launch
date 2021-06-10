@@ -1,3 +1,9 @@
+<!-- 
+BSD 3-Clause License
+Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+All rights reserved. 
+-->
+
 <launch>
   <arg name="arm_name" default="flying_arm_3" />
 

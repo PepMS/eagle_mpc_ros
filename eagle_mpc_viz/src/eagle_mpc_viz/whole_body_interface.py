@@ -1,3 +1,9 @@
+############################################################################## 
+# BSD 3-Clause License
+# Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+# All rights reserved. 
+##############################################################################
+
 from eagle_mpc_msgs.msg import WholeBodyState, Thrust, JointState
 import pinocchio
 import numpy as np

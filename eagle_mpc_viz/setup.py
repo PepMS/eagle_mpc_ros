@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+############################################################################## 
+# BSD 3-Clause License
+# Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+# All rights reserved. 
+##############################################################################
+
 from distutils.core import setup
 from catkin_pkg.python_setup import generate_distutils_setup
 
