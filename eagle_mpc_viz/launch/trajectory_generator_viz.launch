@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="namespace" default="trajectory_generation" />
+
+  <arg name="mav_name" default="hexacopter370" />
+  <arg name="trajectory_name" default="hover" />
+  <arg name="arm_enable" default="false" />
+  <arg name="arm_name" default="flying_arm_3" />
+
+  <arg name="trajectory_dt" default="20" />
+  <arg name="trajectory_solver" default="SolverSbFDDP" />
+  <arg name="launch_tools" default="true" />
+
+  <arg name="trajectory_config" default="$(arg mav_name)_$(arg trajectory_name).yaml" unless="$(arg arm_enable)" />
+  <arg name="trajectory_config" default="$(arg mav_name)_$(arg arm_name)_$(arg trajectory_name).yaml" if="$(arg arm_enable)" />
+
+  <group ns="$(arg namespace)">
+    <param name="trajectory_path" value="$(find eagle_mpc_yaml)/trajectories/$(arg trajectory_config)" />
+    <param name="trajectory_dt" value="$(arg trajectory_dt)" />
+    <param name="trajectory_solver" value="$(arg trajectory_solver)" />
+    <node pkg="eagle_mpc_viz" name="tg_node" type="trajectory_generation_viz.py" output="screen" />
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find eagle_mpc_viz)/rviz/trajectory_display.rviz" if="$(arg launch_tools)" />
+    <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" if="$(arg launch_tools)" />
+  </group>
+
+
+</launch>

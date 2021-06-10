@@ -1,0 +1,1 @@
+eagle_mpc_msgs/Waypoint[] waypoints

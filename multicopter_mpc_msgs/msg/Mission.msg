@@ -1,1 +1,0 @@
-multicopter_mpc_msgs/Waypoint[] waypoints

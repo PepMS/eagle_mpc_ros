@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="mav_name" default="hexacopter370" />
+  <arg name="enable_ground_truth" default="false" />
+  <arg name="arm_enable" default="false" />
+  <arg name="arm_name" default="flying_arm_3" />
+
+  <arg name="disturbance_enable" default="false" />
+  <arg name="disturbance_external_trigger" default="true" />
+  <arg name="disturbance_start" default="3" />
+  <arg name="disturbance_duration" default="4" />
+  <arg name="disturbance_force" default="5" />
+  <arg name="disturbance_direction" default="0 0 0" />
+
+  <group ns="$(arg mav_name)">
+    <include file="$(find eagle_mpc_simulator)/launch/spawn_mav.launch">
+      <arg name="mav_name" value="$(arg mav_name)" />
+      <arg name="enable_ground_truth" value="$(arg enable_ground_truth)" />
+      <arg name="arm_enable" value="$(arg arm_enable)" />
+      <arg name="arm_name" value="$(arg arm_name)" />
+      <arg name="disturbance_enable" value="$(arg disturbance_enable)"/>
+      <arg name="disturbance_external_trigger" value="$(arg disturbance_external_trigger)" />
+      <arg name="disturbance_start" default="$(arg disturbance_start)" />
+      <arg name="disturbance_duration" default="$(arg disturbance_duration)" />
+      <arg name="disturbance_force" default="$(arg disturbance_force)" />
+      <arg name="disturbance_direction" default="$(arg disturbance_direction)" />
+    </include>
+
+    <include file="$(find eagle_mpc_simulator)/launch/spawn_arm_controller.launch" if="$(arg arm_enable)">
+      <arg name="arm_name" value="$(arg arm_name)"/>
+    </include>
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+    <!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" /> -->
+  </group>
+
+</launch>
