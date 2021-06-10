@@ -39,7 +39,7 @@
   <arg name="mpc_config" value="$(arg mav_name)_mpc.yaml" unless="$(arg arm_enable)" />
   <arg name="mpc_config" value="$(arg mav_name)_$(arg arm_name)_mpc.yaml" if="$(arg arm_enable)" />
 
-  <arg name="bag_file" default="$(find eagle_mpc_bag)/rosbags/$(arg trajectory_name).bag" />
+  <arg name="bag_file" default="" />
 
   <!-- SIMULATOR -->
   <include file="$(find eagle_mpc_simulator)/launch/simulator.launch">
