@@ -5,9 +5,6 @@ trajectory:
     follow: "/home/pepms/wsros/mpc-ws/src/eagle_mpc_ros/eagle_mpc_yaml/multicopter/hexacopter370.yaml"
 
   initial_state: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0]
-  # initial_state: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0,0,0,0,0,0,0,0,0,0]
-  # initial_state: [0, 0, 0, 0, -0.9659258, 0, 0.258819, 0, 0, 0,0,0,0,0,0,0,0,0,0]
-  
 
   stages:
     - name: "balancing"
@@ -77,7 +74,7 @@ trajectory:
       costs:
         - name: "state_reg"
           type: "CostModelState"
-          weight: 1e-2
+          weight: 1e-4
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights:
