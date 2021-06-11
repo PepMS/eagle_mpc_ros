@@ -1,0 +1,14 @@
+<!-- 
+BSD 3-Clause License
+Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+All rights reserved. 
+-->
+
+<launch>
+  <arg name="mav_name" default="iris" />
+
+  <env name="ROSCONSOLE_CONFIG_FILE" value="$(find eagle_mpc_controller)/cfg/custom_rosconsole.conf" />
+  <group ns="$(arg mav_name)">
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find eagle_mpc_controller)/rviz/mpc_runner.rviz" />
+  </group>
+</launch>

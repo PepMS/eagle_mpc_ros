@@ -1,0 +1,17 @@
+
+<library path="libeagle_mpc_rviz_plugins">
+	<class name="eagle_mpc_rviz_plugins/WholeBodyState"
+           type="eagle_mpc_rviz_plugins::WholeBodyStateDisplay"
+           base_class_type="rviz::Display">
+	<description>
+		Displays the whole-body state published.
+	</description>
+	</class>
+	<class name="eagle_mpc_rviz_plugins/WholeBodyTrajectory"
+           type="eagle_mpc_rviz_plugins::WholeBodyTrajectoryDisplay"
+           base_class_type="rviz::Display">
+	<description>
+		Displays the whole-body trajectory generated.
+	</description>
+	</class>
+</library>

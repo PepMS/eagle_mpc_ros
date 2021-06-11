@@ -1,0 +1,11 @@
+Header header
+
+duration solving_time
+uint64 iters
+float64 final_cost
+duration initial_time
+
+eagle_mpc_msgs/FloatingBaseState floating_base_initial
+eagle_mpc_msgs/JointState[] joints_initial
+
+eagle_mpc_msgs/FloatingBaseState[] floating_base_trajectory

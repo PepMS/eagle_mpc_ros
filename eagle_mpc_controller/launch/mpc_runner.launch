@@ -1,0 +1,123 @@
+<!-- 
+BSD 3-Clause License
+Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
+All rights reserved. 
+-->
+
+<launch>
+  <!-- OPTIONS -->
+  <!-- Robot & maneuver -->
+  <arg name="mav_name" default="hexacopter370" />
+  <arg name="trajectory_name" default="hover" />
+  <arg name="arm_enable" default="false" />
+  <arg name="arm_name" default="flying_arm_3" />
+
+  <!-- Trajectory optimization -->
+  <arg name="trajectory_dt" default="20" />
+  <arg name="trajectory_solver" default="SolverSbFDDP" />
+  <arg name="trajectory_integration" default="IntegratedActionModelEuler" />
+
+  <!-- MPC Controller-->
+  <arg name="mpc_type" default="Carrot" />
+  <arg name="use_internal_gains" default="false" />
+  <arg name="motor_command_dt" default="4" />
+
+  <!-- Simulation environment-->
+  <arg name="groundtruth" default="false" />
+  <arg name="rosbag" default="false" />
+  <arg name="record_solver" default="false" />
+  <arg name="record_solver_level" default="0"/>
+  <arg name="automatic_start" default="false" />
+  <arg name="rviz" default="true" />
+
+  <!-- Disturbance configuration -->
+  <arg name="disturbance_enable" default="false" />
+  <arg name="disturbance_start" default="2" />
+  <arg name="disturbance_duration" default="1" />
+  <arg name="disturbance_force" default="10" />
+  <arg name="disturbance_direction" default="1 1 0" />
+
+  <!-- PARAMETERS -->
+  <arg name="trajectory_config" value="$(arg mav_name)_$(arg trajectory_name).yaml" unless="$(arg arm_enable)" />
+  <arg name="trajectory_config" value="$(arg mav_name)_$(arg arm_name)_$(arg trajectory_name).yaml" if="$(arg arm_enable)" />
+
+  <arg name="namespace_mpc" default="$(arg mpc_type)" />
+  <arg name="mpc_config" value="$(arg mav_name)_mpc.yaml" unless="$(arg arm_enable)" />
+  <arg name="mpc_config" value="$(arg mav_name)_$(arg arm_name)_mpc.yaml" if="$(arg arm_enable)" />
+
+  <arg name="bag_file" default="" />
+
+  <!-- SIMULATOR -->
+  <include file="$(find eagle_mpc_simulator)/launch/simulator.launch">
+    <arg name="mav_name" value="$(arg mav_name)" />
+    <arg name="world_name" value="basic" />
+    <arg name="enable_ground_truth" value="true" />
+    <arg name="debug" value="false" />
+    <arg name="gazebo_gui" value="false" />
+    <arg name="paused" value="false" />
+    <arg name="arm_enable" value="$(arg arm_enable)" />
+    <arg name="arm_name" value="$(arg arm_name)" />
+    <arg name="disturbance_enable" value="$(arg disturbance_enable)" />
+    <arg name="disturbance_start" value="$(arg disturbance_start)" />
+    <arg name="disturbance_duration" value="$(arg disturbance_duration)" />
+    <arg name="disturbance_force" value="$(arg disturbance_force)" />
+    <arg name="disturbance_direction" value="$(arg disturbance_direction)" />
+  </include>
+
+  <!-- MPC CONTROLLER -->
+  <group ns="$(arg namespace_mpc)">
+    <param name="trajectory_config" value="$(find eagle_mpc_yaml)/trajectories/$(arg trajectory_config)" />
+    <param name="trajectory_dt" value="$(arg trajectory_dt)" />
+    <param name="trajectory_solver" value="$(arg trajectory_solver)" />
+    <param name="trajectory_integration" value="$(arg trajectory_integration)" />
+
+    <param name="mpc_config" value="$(find eagle_mpc_yaml)/mpc/$(arg mpc_config)" />
+    <param name="mpc_type" value="$(arg mpc_type)" />
+
+    <param name="use_internal_gains" value="$(arg use_internal_gains)" />
+    <param name="record_solver" value="$(arg record_solver)" />
+    <param name="record_solver_level" value="$(arg record_solver_level)" />
+    <param name="automatic_start" value="$(arg automatic_start)" />
+    <param name="motor_command_dt" value="$(arg motor_command_dt)" if="$(arg use_internal_gains)" />
+    <param name="arm_name" value="$(arg arm_name)" if="$(arg arm_enable)" />
+
+    <node name="mpc_controller" pkg="eagle_mpc_controller" type="mpc_runner_node" output="screen">
+      <remap from="/odometry" to="/$(arg mav_name)/ground_truth/odometry" if="$(arg groundtruth)" />
+      <remap from="/odometry" to="/$(arg mav_name)/odometry_sensor1/odometry" unless="$(arg groundtruth)" />
+      <remap from="/motor_command" to="/$(arg mav_name)/command/motor_speed" />
+      <remap from="/joint_states" to="/$(arg mav_name)/joint_states" />
+      <remap from="/joint_command_1" to="/$(arg mav_name)/joint1_effort_controller/command" if="$(arg arm_enable)" />
+      <remap from="/joint_command_2" to="/$(arg mav_name)/joint2_effort_controller/command" if="$(arg arm_enable)" />
+      <remap from="/joint_command_3" to="/$(arg mav_name)/joint3_effort_controller/command" if="$(arg arm_enable)" />
+      <remap from="/solver_performance" to="/$(arg mav_name)/solver_performance" if="$(arg record_solver)" />
+    </node>
+
+    <group if="$(arg disturbance_enable)">
+      <param name="disturbance_start" value="$(arg disturbance_start)" />
+      <param name="disturbance_duration" value="$(arg disturbance_duration)" />
+
+      <node name="disturbance_trigger" pkg="eagle_mpc_simulator" type="disturbance_trigger.py" output="screen">
+        <remap from="/disturbance_enable" to="/$(arg mav_name)/disturbance_enable" />
+      </node>
+    </group>
+  </group>
+
+  <!-- VISUALIZER -->
+  <include file="$(find eagle_mpc_viz)/launch/trajectory_generator_viz.launch">
+    <arg name="trajectory_config" value="$(arg trajectory_config)" />
+    <arg name="trajectory_dt" value="$(arg trajectory_dt)" />
+    <arg name="launch_tools" value="false" />
+  </include>
+
+  <include file="$(find eagle_mpc_controller)/launch/rviz.launch" if="$(arg rviz)">
+    <arg name="mav_name" value="$(arg mav_name)" />
+  </include>
+
+  <arg name="bag_topics" default="/$(arg mav_name)/ground_truth/odometry /$(arg mav_name)/ground_truth/pose /$(arg mav_name)/joint_states /$(arg mav_name)/motor_speed /tf /tf_static /clock /$(arg mav_name)/external_force" />
+  <!-- AUXILIARY NODES -->
+  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="$(arg mpc_type)_rqt_reconfigure" unless="$(arg automatic_start)" />
+  <group if="$(arg rosbag)">
+    <node name="record_node" pkg="rosbag" type="record" args="record -o $(arg bag_file) $(arg bag_topics) /$(arg mav_name)/solver_performance" if="$(arg record_solver)" />
+    <node name="record_node" pkg="rosbag" type="record" args="record -o $(arg bag_file) $(arg bag_topics)" unless="$(arg record_solver)" />
+  </group>
+</launch>
