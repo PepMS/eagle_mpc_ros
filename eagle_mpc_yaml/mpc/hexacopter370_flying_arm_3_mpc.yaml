@@ -21,11 +21,11 @@ mpc_controller:
   carrot_state_limits_u_bound: [0, 0, 0, 0, 0, 0, 1.9, 1.9, 1.9, 0, 0, 0, 0, 0, 0, 3, 3, 3]
   carrot_state_limits_l_bound: [0, 0, 0, 0, 0, 0, -1.9, -1.9, -1.9, 0, 0, 0, 0, 0, 0, -3, -3, -3]
 
-  rail_weight: 1
-  rail_activation_weights: [1000, 1000, 1000, 1, 1, 1, 1000, 1000, 1000, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  rail_weight: 100
+  rail_activation_weights: [80, 80, 80, 1, 1, 1, 80, 80, 80, 1, 1, 1, 1, 1, 1, 1, 1, 1]
   rail_control_weight: 1e-2
 
-  weighted_alpha: 0.01
-  weighted_beta: 0.1
+  weighted_alpha: 3.0
+  weighted_beta: 0.01
   weighted_state_reg: 1e-1
-  weighted_control_reg: 1e-1
+  weighted_control_reg: 1e-2

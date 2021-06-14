@@ -74,7 +74,7 @@ trajectory:
       costs:
         - name: "state_reg"
           type: "CostModelState"
-          weight: 1e-4
+          weight: 1e-2
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights:

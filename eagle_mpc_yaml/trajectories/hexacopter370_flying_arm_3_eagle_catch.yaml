@@ -4,7 +4,7 @@ trajectory:
     urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/hexacopter370_description/urdf/hexacopter370_flying_arm_3.urdf"
     follow: "/home/pepms/wsros/mpc-ws/src/eagle_mpc_ros/eagle_mpc_yaml/multicopter/hexacopter370.yaml"
 
-  initial_state: [-5, 0, 1.5, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  initial_state: [-5, 0, 1.0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
   stages:
     - name: "approach"
@@ -34,7 +34,7 @@ trajectory:
           weight: 1e-2
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
+          weights: [1, 1, 1, 1, 1, 1, 0.1, 0.1, 0.1]
 
     - name: "pre_grasp"
       duration: 0 #ms
@@ -62,18 +62,20 @@ trajectory:
           weight: 1e-2
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
+          weights: [1, 1, 1, 1, 1, 1, 0.1, 0.1, 0.1]
 
         - name: "translation_ee"
           type: "CostModelFrameTranslation"
           weight: 1e4
-          link_name: "flying_arm_3__link_3"
+          link_name: "flying_arm_3__gripper"
           position: [0, 0, 0]
 
         - name: "motion_ee"
           type: "CostModelFrameVelocity"
           weight: 1e3
-          link_name: "flying_arm_3__link_3"
+          link_name: "flying_arm_3__gripper"
+          # activation: "ActivationModelWeightedQuad"
+          # weights: [1, 1, 1, 0, 0, 0]
           linear: [0, 0, 0]
           angular: [0, 0, 0]
 
@@ -103,32 +105,34 @@ trajectory:
           weight: 1e-2
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
+          weights: [1, 1, 1, 1, 1, 1, 0.1, 0.1, 0.1]
 
         - name: "translation_ee"
           type: "CostModelFrameTranslation"
           weight: 1000
-          link_name: "flying_arm_3__link_3"
+          link_name: "flying_arm_3__gripper"
           position: [0, 0, 0]
 
         - name: "motion_ee"
           type: "CostModelFrameVelocity"
-          weight: 1000
-          link_name: "flying_arm_3__link_3"
+          weight: 500
+          link_name: "flying_arm_3__gripper"
+          # activation: "ActivationModelWeightedQuad"
+          # weights: [1, 1, 1, 0, 0, 0]
           linear: [0, 0, 0]
           angular: [0, 0, 0]
 
         - name: "friction_cone"
           type: "CostModelContactFrictionCone"
-          weight: 100 # working with 10
+          weight: 10 # working with 10
           n_surf: [0, 0, 1]
           mu: 0.7
-          link_name: "flying_arm_3__link_3"
+          link_name: "flying_arm_3__gripper"
 
       contacts:
         - name: "end_effector"
           type: "ContactModel3D"
-          link_name: "flying_arm_3__link_3"
+          link_name: "flying_arm_3__gripper"
           position: [0, 0, 0]
           gains: [0, 0]
 
@@ -157,7 +161,7 @@ trajectory:
           weight: 1e-2
           reference: [0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
-          weights: [1, 1, 1, 1, 1, 1, 10, 10, 10]
+          weights: [1, 1, 1, 1, 1, 1, 0.1, 0.1, 0.1]
 
     - name: "hover"
       duration: 0 #ms
@@ -168,12 +172,14 @@ trajectory:
           reference: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+
         - name: "placement_base_link"
           type: "CostModelFramePlacement"
           weight: 2000
           link_name: "hexacopter370__base_link"
           position: [5, 0, 1.5]
           orientation: [0, 0, 0, 1] # x,y,z,w
+
         - name: "motion_base_link"
           type: "CostModelFrameVelocity"
           weight: 2000
