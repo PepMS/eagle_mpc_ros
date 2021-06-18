@@ -32,6 +32,10 @@ This package contains YAML files that describe multicopter platforms geomteries,
 
 ## Installation
 ### Dependencies
+#### ROS Control
+```console
+sudo apt-get install ros-noetic-ros-control ros-noetic-ros-controllers
+```
 
 #### EagleMPC
 Install this library following the instructions detailed [here](https://github.com/PepMS/eagle-mpc)
