@@ -41,6 +41,12 @@ You should install [this forked version](https://github.com/PepMS/rotors_simulat
 
 ### EagleMPC - ROS
 Clone this repo inside your workspace and run `catkin_make`
+```console
+cd <ros_ws>/src
+git clone https://github.com/PepMS/eagle_mpc_ros.git
+cd ..
+catkin_make
+```
 
 ## Running an example
 ```
