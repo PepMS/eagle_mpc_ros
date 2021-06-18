@@ -37,7 +37,7 @@ This package contains YAML files that describe multicopter platforms geomteries,
 Install this library following the instructions detailed [here](https://github.com/PepMS/eagle-mpc)
 
 #### RotorS simulator
-You should install [this forked version](https://github.com/ethz-asl/rotors_simulator) including modifications to be used with UAMs.
+You should install [this forked version](https://github.com/PepMS/rotors_simulator.git) including modifications to be used with UAMs.
 
 ### EagleMPC - ROS
 Clone this repo inside your workspace and run `catkin_make`
