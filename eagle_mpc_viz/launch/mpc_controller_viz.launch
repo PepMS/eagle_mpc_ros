@@ -15,7 +15,7 @@ All rights reserved.
   <arg name="bag_name" default="" />
   <arg name="bag_player" default="false" />
   <arg name="bag_speed" default="1" unless="$(arg horizon_enable)" />
-  <arg name="bag_speed" default="0.1" if="$(arg horizon_enable)" />
+  <arg name="bag_speed" default="0.2" if="$(arg horizon_enable)" />
   <arg name="payload_enable" default="false" />
   <!-- 0: load -> no load, 1: no load -> load -->
   <arg name="payload_direction" default="0" />
@@ -54,7 +54,7 @@ All rights reserved.
     <param name="mpc_path" value="$(find eagle_mpc_yaml)/mpc/$(arg mpc_config)" />
     <param name="mpc_type" value="$(arg mpc_type)" />
     <param name="dynamic_reconfigure_client" value="$(arg trajectory_namespace)/tg_node" />
-    <param name="bag_path" value="$(find eagle_mpc_bag)/rosbags/$(arg bag_name)" if="$(arg bag_enable)" />
+    <param name="bag_path" value="$(arg bag_name)" if="$(arg bag_enable)" />
     <param name="horizon_enable" value="$(arg horizon_enable)" />
     <param name="payload_enable" value="$(arg payload_enable)" />
     <param name="payload_direction" value="$(arg payload_direction)" if="$(arg payload_enable)" />
