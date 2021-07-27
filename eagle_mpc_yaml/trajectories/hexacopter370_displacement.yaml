@@ -36,7 +36,7 @@ trajectory:
         - name: "reg_control"
           type: "CostModelControl"
           weight: 1e-2
-          reference: [0, 0, 0, 0, 0, 0,]
+          reference: [0, 0, 0, 0, 0, 0]
           activation: "ActivationModelWeightedQuad"
           weights: [1, 1, 1, 1, 1, 1]
           
@@ -94,7 +94,8 @@ trajectory:
           weight: 2000
           link_name: "hexacopter370__base_link"
           position: [1, 0, 2]
-          orientation: [0, 0, 1, 1] # x,y,z,w
+          # orientation: [0, 0, 1, 1] # x,y,z,w
+          orientation: [0, 0, 0, 1] # x,y,z,w
 
         - name: "motion_base_link"
           type: "CostModelFrameVelocity"
@@ -143,7 +144,8 @@ trajectory:
           weight: 2000
           link_name: "hexacopter370__base_link"
           position: [1, 1, 2]
-          orientation: [0, 0, 1, 0] # x,y,z,w
+          # orientation: [0, 0, 1, 0] # x,y,z,w
+          orientation: [0, 0, 0, 1] # x,y,z,w
 
         - name: "motion_base_link"
           type: "CostModelFrameVelocity"
@@ -192,7 +194,8 @@ trajectory:
           weight: 2000
           link_name: "hexacopter370__base_link"
           position: [0, 1, 2]
-          orientation: [0, 0, 1, 1] # x,y,z,w
+          # orientation: [0, 0, 1, 1] # x,y,z,w
+          orientation: [0, 0, 0, 1] # x,y,z,w
 
         - name: "motion_base_link"
           type: "CostModelFrameVelocity"
