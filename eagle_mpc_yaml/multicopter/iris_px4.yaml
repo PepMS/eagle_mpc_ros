@@ -8,16 +8,16 @@ platform:
     $rotors:
         - translation: [0.13, -0.22, 0.023]
           orientation: [0, 0, 0, 1] # x, y, z, w
-          spin_direction: [1] # (-) means CCW
+          spin_direction: [-1] # (-) means CCW
 
         - translation: [-0.13, 0.2, 0.023]
           orientation: [0, 0, 0, 1] # x, y, z, w
-          spin_direction: [1]
+          spin_direction: [-1]
         
         - translation: [0.13, 0.22, 0.023]
           orientation: [0, 0, 0, 1] # x, y, z, w
-          spin_direction: [-1]
+          spin_direction: [1]
         
         - translation: [-0.13, -0.2, 0.023]
           orientation: [0, 0, 0, 1] # x, y, z, w
-          spin_direction: [-1]
+          spin_direction: [1]

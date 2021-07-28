@@ -4,11 +4,11 @@ trajectory:
     urdf: "/home/pepms/robotics/libraries/example-robot-data/robots/iris_description/robots/iris_px4.urdf"
     follow: "/home/pepms/wsros/mpc-ws/src/eagle_mpc_ros/eagle_mpc_yaml/multicopter/iris_px4.yaml"
 
-  initial_state: [0, 0, 2.5, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+  initial_state: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
 
   stages:
     - name: "navigation"
-      duration: 800 #ms
+      duration: 5000 #ms
       transition: true
       costs:
         - name: "reg_state"

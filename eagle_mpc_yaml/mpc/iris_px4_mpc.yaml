@@ -10,8 +10,8 @@ mpc_controller:
   dt: 20
 
   carrot_weight: 1000
-  carrot_tail_weight: 0.1
-  carrot_tail_act_weights: [1000, 1000, 1000, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  carrot_tail_weight: 1
+  carrot_tail_act_weights: [100, 100, 100, 1, 1, 1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
   carrot_control_reg_weight: 5e-1
   carrot_control_reg_act_weights: [1, 1, 1, 1]
   carrot_state_reg_weight: 1e-2
