@@ -25,7 +25,7 @@ class WholeBodyTrajectoryPublisher():
             for stage in self._trajectory.stages:
                 for cost in stage.cost_types.todict():
                     if stage.cost_types.todict()[cost] == eagle_mpc.CostModelTypes.CostModelFramePlacement:
-                        self._placements.append(stage.costs.costs[cost].cost.reference.placement)
+                        self._placements.append(stage.costs.costs[cost].cost.residual.reference)
 
         self.writeTrajectoryMessage()
 
