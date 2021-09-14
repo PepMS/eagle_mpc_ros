@@ -18,11 +18,11 @@ All rights reserved.
   <arg name="trajectory_solver" default="SolverSbFDDP" />
   <arg name="launch_tools" default="true" />
 
-  <arg name="trajectory_config" default="$(arg mav_name)_$(arg trajectory_name).yaml" unless="$(arg arm_enable)" />
-  <arg name="trajectory_config" default="$(arg mav_name)_$(arg arm_name)_$(arg trajectory_name).yaml" if="$(arg arm_enable)" />
+  <arg name="trajectory_config" default="$(arg mav_name)/trajectories/$(arg trajectory_name).yaml" unless="$(arg arm_enable)" />
+  <arg name="trajectory_config" default="$(arg mav_name)_$(arg arm_name)/trajectories/$(arg trajectory_name).yaml" if="$(arg arm_enable)" />
 
   <group ns="$(arg namespace)">
-    <param name="trajectory_path" value="$(find eagle_mpc_yaml)/trajectories/$(arg trajectory_config)" />
+    <param name="trajectory_path" value="$(arg trajectory_config)" />
     <param name="trajectory_dt" value="$(arg trajectory_dt)" />
     <param name="trajectory_solver" value="$(arg trajectory_solver)" />
     <node pkg="eagle_mpc_viz" name="tg_node" type="trajectory_generation_viz.py" output="screen" />

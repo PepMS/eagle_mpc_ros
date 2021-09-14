@@ -53,11 +53,7 @@ class TrajectoryNode():
 
         self.rate = rospy.Rate(100)
 
-        rospack = rospkg.RosPack()
-
-        self.trajectory_path = rospy.get_param(
-            rospy.get_namespace() + "/trajectory_path",
-            rospack.get_path('eagle_mpc_yaml') + '/trajectories/quad_hover.yaml')
+        self.trajectory_path = eagle_mpc.getYamlPath(rospy.get_param(rospy.get_namespace() + "/trajectory_path"))
         self.trajectory = Trajectory(self.trajectory_path)
 
         self.dt = rospy.get_param(rospy.get_namespace() + "/trajectory_dt", 10)

@@ -18,6 +18,7 @@ All rights reserved.
   <arg name="trajectory_integration" default="IntegratedActionModelEuler" />
 
   <!-- MPC Controller-->
+  <arg name="mpc_config_file" default="mpc"/>
   <arg name="mpc_type" default="Carrot" />
   <arg name="use_internal_gains" default="false" />
   <arg name="motor_command_dt" default="4" />
@@ -38,12 +39,12 @@ All rights reserved.
   <arg name="disturbance_direction" default="1 1 0" />
 
   <!-- PARAMETERS -->
-  <arg name="trajectory_config" value="$(arg mav_name)_$(arg trajectory_name).yaml" unless="$(arg arm_enable)" />
-  <arg name="trajectory_config" value="$(arg mav_name)_$(arg arm_name)_$(arg trajectory_name).yaml" if="$(arg arm_enable)" />
+  <arg name="trajectory_config" value="$(arg mav_name)/trajectories/$(arg trajectory_name).yaml" unless="$(arg arm_enable)" />
+  <arg name="trajectory_config" value="$(arg mav_name)_$(arg arm_name)/trajectories/$(arg trajectory_name).yaml" if="$(arg arm_enable)" />
 
   <arg name="namespace_mpc" default="$(arg mpc_type)" />
-  <arg name="mpc_config" value="$(arg mav_name)_mpc.yaml" unless="$(arg arm_enable)" />
-  <arg name="mpc_config" value="$(arg mav_name)_$(arg arm_name)_mpc.yaml" if="$(arg arm_enable)" />
+  <arg name="mpc_config" value="$(arg mav_name)/mpc/$(arg mpc_config_file).yaml" unless="$(arg arm_enable)" />
+  <arg name="mpc_config" value="$(arg mav_name)_$(arg arm_name)/mpc/$(arg mpc_config_file).yaml" if="$(arg arm_enable)" />
 
   <arg name="bag_file" default="" />
 
@@ -66,12 +67,12 @@ All rights reserved.
 
   <!-- MPC CONTROLLER -->
   <group ns="$(arg namespace_mpc)">
-    <param name="trajectory_config" value="$(find eagle_mpc_yaml)/trajectories/$(arg trajectory_config)" />
+    <param name="trajectory_config" value="$(arg trajectory_config)" />
     <param name="trajectory_dt" value="$(arg trajectory_dt)" />
     <param name="trajectory_solver" value="$(arg trajectory_solver)" />
     <param name="trajectory_integration" value="$(arg trajectory_integration)" />
 
-    <param name="mpc_config" value="$(find eagle_mpc_yaml)/mpc/$(arg mpc_config)" />
+    <param name="mpc_config" value="$(arg mpc_config)" />
     <param name="mpc_type" value="$(arg mpc_type)" />
 
     <param name="use_internal_gains" value="$(arg use_internal_gains)" />

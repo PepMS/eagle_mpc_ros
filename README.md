@@ -27,9 +27,6 @@ Simulation related tools such as UAMs spawning or the triggering of external dis
 ### EagleMPC - viz
 This package contains visualization tools. It contains several nodes and launch files that allows you to visualize offline generated trajectories as well as rosbags from simulations involving the MPC controllers.
 
-### EagleMPC - yaml
-This package contains YAML files that describe multicopter platforms geomteries, trajectories and the tunning for the MPC controllers.
-
 ## Installation
 ### Dependencies
 #### ROS Control

@@ -23,14 +23,15 @@ All rights reserved.
 
   <arg name="trajectory_name" default="hover" />
   <arg name="trajectory_namespace" value="trajectory_generation" />
-  <arg name="trajectory_config" value="$(arg mav_name)_$(arg trajectory_name).yaml" unless="$(arg arm_enable)" />
-  <arg name="trajectory_config" value="$(arg mav_name)_$(arg arm_name)_$(arg trajectory_name).yaml" if="$(arg arm_enable)" />
+  <arg name="trajectory_config" default="$(arg mav_name)/trajectories/$(arg trajectory_name).yaml" unless="$(arg arm_enable)" />
+  <arg name="trajectory_config" default="$(arg mav_name)_$(arg arm_name)/trajectories/$(arg trajectory_name).yaml" if="$(arg arm_enable)" />
   <arg name="trajectory_dt" default="20" />
   <arg name="trajectory_solver" default="SolverSbFDDP" />
 
   <arg name="namespace_controller" value="mpc_controller" />
-  <arg name="mpc_config" value="$(arg mav_name)_mpc.yaml" unless="$(arg arm_enable)" />
-  <arg name="mpc_config" value="$(arg mav_name)_$(arg arm_name)_mpc.yaml" if="$(arg arm_enable)" />
+  <arg name="mpc_config_file" default="mpc"/>
+  <arg name="mpc_config" value="$(arg mav_name)/mpc/$(arg mpc_config_file).yaml" unless="$(arg arm_enable)" />
+  <arg name="mpc_config" value="$(arg mav_name)_$(arg arm_name)/mpc/$(arg mpc_config_file).yaml" if="$(arg arm_enable)" />
   <arg name="mpc_type" default="Carrot" />
 
   <arg name="rviz_file" default="$(find eagle_mpc_viz)/rviz/mpc_controller_display.rviz" unless="$(arg payload_enable)" />
@@ -48,10 +49,10 @@ All rights reserved.
   </include>
 
   <group ns="$(arg namespace_controller)">
-    <param name="trajectory_path" value="$(find eagle_mpc_yaml)/trajectories/$(arg trajectory_config)" />
+    <param name="trajectory_path" value="$(arg trajectory_config)" />
     <param name="trajectory_dt" value="$(arg trajectory_dt)" />
     <param name="trajectory_solver" value="$(arg trajectory_solver)" />
-    <param name="mpc_path" value="$(find eagle_mpc_yaml)/mpc/$(arg mpc_config)" />
+    <param name="mpc_path" value="$(arg mpc_config)" />
     <param name="mpc_type" value="$(arg mpc_type)" />
     <param name="dynamic_reconfigure_client" value="$(arg trajectory_namespace)/tg_node" />
     <param name="bag_path" value="$(arg bag_name)" if="$(arg bag_enable)" />
