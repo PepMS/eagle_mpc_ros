@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-############################################################################## 
+##############################################################################
 # BSD 3-Clause License
 # Copyright (c) 2021, Institut de Robotica i Informatica Industrial (CSIC-UPC)
-# All rights reserved. 
+# All rights reserved.
 ##############################################################################
 
+import eagle_mpc
 import rospy
 import rospkg
 from rospy import exceptions
@@ -16,6 +17,8 @@ import dynamic_reconfigure.client
 import numpy as np
 import pinocchio
 import example_robot_data
+
+from eagle_mpc.utils.path import EAGLE_MPC_ROBOT_DATA_DIR, EAGLE_MPC_YAML_DIR
 
 from eagle_mpc_viz import MpcController
 from eagle_mpc_viz import WholeBodyStatePublisher
@@ -79,9 +82,7 @@ class MpcControllerNode():
 
         self.bag_path = rospy.get_param(rospy.get_namespace() + "/bag_path", "")
 
-        self.trajectoryPath = rospy.get_param(
-            rospy.get_namespace() + "/trajectory_path",
-            rospack.get_path('eagle_mpc_yaml') + '/trajectories/quad_hover.yaml')
+        self.trajectoryPath = eagle_mpc.getYamlPath(rospy.get_param(rospy.get_namespace() + "/trajectory_path"))
         self.mpcPath = rospy.get_param(rospy.get_namespace() + "/mpc_path",
                                        rospack.get_path('eagle_mpc_yaml') + '/mpc/mpc.yaml')
         self.trajectoryDt = rospy.get_param(rospy.get_namespace() + "/trajectory_dt", 10)
